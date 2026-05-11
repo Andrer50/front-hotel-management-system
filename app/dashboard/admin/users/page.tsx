@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { CreateUserDialog } from "@/presentation/dashboard/admin/users/create-user-dialog";
 
 // Interfaces de datos para el Directorio de Personal
 interface PersonalMember {
@@ -98,6 +99,7 @@ export default function UsersManagementPage() {
   const [activeDepartmentFilter, setActiveDepartmentFilter] = useState<string>("Todos los Departamentos");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Filtro inteligente de personal por departamento y búsqueda
   const filteredStaff = useMemo(() => {
@@ -128,13 +130,11 @@ export default function UsersManagementPage() {
   }, [filteredStaff]);
 
   const handleAddStaff = () => {
-    toast.success("Módulo de Registro Inicializado", {
-      description: "El formulario flotante para añadir nuevo personal de lujo ha sido abierto.",
-      action: {
-        label: "Entendido",
-        onClick: () => {}
-      }
-    });
+    setIsCreateOpen(true);
+  };
+
+  const handleAddMember = (newMember: PersonalMember) => {
+    setStaff((prev) => [newMember, ...prev]);
   };
 
   const handleActionMenu = (name: string) => {
@@ -463,6 +463,12 @@ export default function UsersManagementPage() {
         </div>
 
       </div>
+
+      <CreateUserDialog
+        isOpen={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onAddStaff={handleAddMember}
+      />
 
     </div>
   );

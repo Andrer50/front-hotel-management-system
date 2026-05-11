@@ -30,15 +30,23 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-bg": "#ffffff",
+          "--normal-text": "#121b2d",
+          "--normal-border": "#f1f5f9",
+          "--border-radius": "1rem",
+          "--description-color": "#475569",
         } as React.CSSProperties
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast:
+            "group toast group-[.toaster]:bg-white group-[.toaster]:text-dark-primary group-[.toaster]:border-zinc-100 group-[.toaster]:shadow-xl group-[.toaster]:rounded-2xl group-[.toaster]:p-4 group-[.toaster]:font-sans",
+          description: "group-[.toast]:!text-[#475569] group-[.toast]:font-semibold group-[.toast]:text-[11px] group-[.toast]:leading-relaxed mt-1",
+          title: "group-[.toast]:!text-dark-primary group-[.toast]:font-extrabold group-[.toast]:text-xs",
+          actionButton:
+            "group-[.toast]:bg-brand-blue group-[.toast]:text-white group-[.toast]:hover:bg-blue-600 group-[.toast]:font-bold group-[.toast]:text-[11px] group-[.toast]:px-4 group-[.toast]:py-2 group-[.toast]:rounded-xl group-[.toast]:cursor-pointer group-[.toast]:transition-all duration-200",
+          cancelButton:
+            "group-[.toast]:bg-zinc-100 group-[.toast]:text-dark-secondary group-[.toast]:hover:bg-zinc-200 group-[.toast]:font-bold group-[.toast]:text-[11px] group-[.toast]:px-4 group-[.toast]:py-2 group-[.toast]:rounded-xl group-[.toast]:cursor-pointer group-[.toast]:transition-all duration-200",
         },
       }}
       {...props}

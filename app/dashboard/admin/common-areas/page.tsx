@@ -1,21 +1,22 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { 
-  Building2, 
-  Clock, 
-  Calendar, 
-  User, 
-  CheckCircle2, 
-  Sparkles, 
-  Search, 
-  Plus, 
+import {
+  Building2,
+  Clock,
+  Calendar,
+  User,
+  CheckCircle2,
+  Sparkles,
+  Search,
+  Plus,
   SlidersHorizontal,
   Dumbbell,
   Compass,
   Flame,
   Waves,
-  ArrowRight
+  ArrowRight,
+  LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ interface CommonArea {
   status: "EN PROCESO" | "PROGRAMADO" | "COMPLETADO";
   time: string;
   staffName: string;
-  icon: any;
+  icon: LucideIcon;
   iconBg: string;
   iconColor: string;
   description: string;
@@ -45,7 +46,7 @@ const initialAreas: CommonArea[] = [
     icon: Waves,
     iconBg: "bg-blue-50",
     iconColor: "text-blue-600",
-    description: "Tratamiento de cloro y limpieza de filtros."
+    description: "Tratamiento de cloro y limpieza de filtros.",
   },
   {
     id: "2",
@@ -57,7 +58,7 @@ const initialAreas: CommonArea[] = [
     icon: Dumbbell,
     iconBg: "bg-[#e2fbe8]",
     iconColor: "text-[#00723a]",
-    description: "Desinfección de equipos y reposición de toallas."
+    description: "Desinfección de equipos y reposición de toallas.",
   },
   {
     id: "3",
@@ -69,7 +70,7 @@ const initialAreas: CommonArea[] = [
     icon: Compass,
     iconBg: "bg-amber-50",
     iconColor: "text-amber-600",
-    description: "Poda artística y mantenimiento del estanque koi."
+    description: "Poda artística y mantenimiento del estanque koi.",
   },
   {
     id: "4",
@@ -81,20 +82,23 @@ const initialAreas: CommonArea[] = [
     icon: Flame,
     iconBg: "bg-red-50",
     iconColor: "text-red-500",
-    description: "Limpieza profunda de parrillas y reposición de carbón."
-  }
+    description: "Limpieza profunda de parrillas y reposición de carbón.",
+  },
 ];
 
 export default function CommonAreasPage() {
   const [areas, setAreas] = useState<CommonArea[]>(initialAreas);
-  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "Interiores" | "Exteriores">("ALL");
+  const [categoryFilter, setCategoryFilter] = useState<
+    "ALL" | "Interiores" | "Exteriores"
+  >("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filtrado de áreas comunes
   const filteredAreas = useMemo(() => {
     return areas.filter((area) => {
-      const matchesCategory = categoryFilter === "ALL" || area.category === categoryFilter;
-      const matchesSearch = 
+      const matchesCategory =
+        categoryFilter === "ALL" || area.category === categoryFilter;
+      const matchesSearch =
         area.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         area.staffName.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
@@ -103,19 +107,19 @@ export default function CommonAreasPage() {
 
   const handleAction = (areaName: string, action: string) => {
     toast(`Mantenimiento de ${areaName}`, {
-      description: `Operación: ${action} asignada al supervisor de turno.`
+      description: `Operación: ${action} asignada al supervisor de turno.`,
     });
   };
 
   const handleCreateArea = () => {
     toast.success("Nueva Área Registrada", {
-      description: "Inicializando protocolo de mantenimiento preventivo para nueva locación."
+      description:
+        "Inicializando protocolo de mantenimiento preventivo para nueva locación.",
     });
   };
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in">
-      
       {/* Cabecera y botón principal */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
@@ -123,11 +127,12 @@ export default function CommonAreasPage() {
             Mantenimiento de Áreas
           </h2>
           <p className="text-dark-secondary text-sm max-w-2xl leading-relaxed">
-            Optimización constante para su bienestar residencial. Controle las rondas de limpieza y el estado operativo.
+            Optimización constante para su bienestar residencial. Controle las
+            rondas de limpieza y el estado operativo.
           </p>
         </div>
 
-        <Button 
+        <Button
           onClick={handleCreateArea}
           className="bg-brand-blue hover:bg-blue-600 text-white font-semibold rounded-xl text-xs flex items-center gap-2 py-3.5 px-5 shadow-lg shadow-brand-blue/15 transition-all cursor-pointer self-start md:self-center"
         >
@@ -138,12 +143,17 @@ export default function CommonAreasPage() {
 
       {/* Grid de Banner del Estado Global y Próximo Turno */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* Banner 1 (Estado Global - Spans 2 cols) */}
         <div className="bg-brand-blue rounded-2xl p-8 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden lg:col-span-2 min-h-[150px] shadow-lg shadow-brand-blue/15">
           {/* Fondo decorativo */}
           <div className="absolute right-0 top-0 opacity-10 pointer-events-none">
-            <svg width="300" height="150" viewBox="0 0 300 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="300"
+              height="150"
+              viewBox="0 0 300 150"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <circle cx="250" cy="50" r="100" stroke="white" strokeWidth="8" />
             </svg>
           </div>
@@ -156,14 +166,13 @@ export default function CommonAreasPage() {
               Mantenimiento de Áreas
             </h3>
             <p className="text-xs text-white/85 leading-relaxed font-medium max-w-sm">
-              Optimización constante para su bienestar residencial. Todas las zonas críticas se encuentran bajo supervisión.
+              Optimización constante para su bienestar residencial. Todas las
+              zonas críticas se encuentran bajo supervisión.
             </p>
           </div>
 
           <div className="text-right shrink-0 relative z-10 self-end sm:self-center">
-            <span className="text-5xl font-black tracking-tight">
-              84%
-            </span>
+            <span className="text-5xl font-black tracking-tight">84%</span>
           </div>
         </div>
 
@@ -172,7 +181,7 @@ export default function CommonAreasPage() {
           <div className="bg-blue-50 text-brand-blue p-2.5 rounded-xl">
             <Clock className="h-5 w-5" />
           </div>
-          
+
           <div className="flex flex-col gap-1 mt-2">
             <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
               PRÓXIMO TURNO
@@ -186,27 +195,27 @@ export default function CommonAreasPage() {
             Ronda de supervisión general
           </span>
         </div>
-
       </div>
 
       {/* Píldoras de Categoría & Barra de Filtros */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        
         {/* Filtro de Categoría */}
         <div className="flex bg-zinc-100 p-1 rounded-xl w-fit">
-          {([
-            { label: "Todos", value: "ALL" },
-            { label: "Interiores", value: "Interiores" },
-            { label: "Exteriores", value: "Exteriores" }
-          ] as const).map((cat) => {
+          {(
+            [
+              { label: "Todos", value: "ALL" },
+              { label: "Interiores", value: "Interiores" },
+              { label: "Exteriores", value: "Exteriores" },
+            ] as const
+          ).map((cat) => {
             const isActive = categoryFilter === cat.value;
             return (
               <button
                 key={cat.label}
                 onClick={() => setCategoryFilter(cat.value)}
                 className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all cursor-pointer ${
-                  isActive 
-                    ? "bg-white text-brand-blue shadow-xs" 
+                  isActive
+                    ? "bg-white text-brand-blue shadow-xs"
                     : "text-dark-secondary hover:text-dark-primary"
                 }`}
               >
@@ -227,7 +236,6 @@ export default function CommonAreasPage() {
             className="pl-9 pr-3 py-1.5 bg-white border-zinc-200 rounded-xl text-xs h-10 shadow-2xs focus:border-brand-blue/30"
           />
         </div>
-
       </div>
 
       {/* Listado de Tarjetas de Áreas Comunes */}
@@ -242,7 +250,9 @@ export default function CommonAreasPage() {
               >
                 {/* Lado Izquierdo: Icono/Thumbnail & Información */}
                 <div className="flex items-center gap-5">
-                  <div className={`h-14 w-14 rounded-xl ${area.iconBg} ${area.iconColor} flex items-center justify-center shrink-0 border border-zinc-100 group-hover:scale-105 transition-transform duration-200`}>
+                  <div
+                    className={`h-14 w-14 rounded-xl ${area.iconBg} ${area.iconColor} flex items-center justify-center shrink-0 border border-zinc-100 group-hover:scale-105 transition-transform duration-200`}
+                  >
                     <IconComponent className="h-6 w-6 stroke-[1.8]" />
                   </div>
 
@@ -271,38 +281,44 @@ export default function CommonAreasPage() {
 
                 {/* Lado Derecho: Badge de Estado & Botones de Acciones */}
                 <div className="flex items-center justify-between sm:justify-end gap-5 border-t sm:border-t-0 pt-3 sm:pt-0 border-zinc-50">
-                  
                   {/* Badge de Estado */}
-                  <span className={`text-[10px] font-black px-3.5 py-1.5 rounded-full ${
-                    area.status === "EN PROCESO" 
-                      ? "bg-blue-50 text-brand-blue border border-blue-100" 
-                      : area.status === "PROGRAMADO"
-                      ? "bg-zinc-100 text-zinc-500"
-                      : "bg-[#e2fbe8] text-[#00723a]"
-                  }`}>
+                  <span
+                    className={`text-[10px] font-black px-3.5 py-1.5 rounded-full ${
+                      area.status === "EN PROCESO"
+                        ? "bg-blue-50 text-brand-blue border border-blue-100"
+                        : area.status === "PROGRAMADO"
+                          ? "bg-zinc-100 text-zinc-500"
+                          : "bg-[#e2fbe8] text-[#00723a]"
+                    }`}
+                  >
                     {area.status}
                   </span>
 
                   {/* Acciones de Tarjeta */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleAction(area.name, "Ver checklist completo")}
+                      onClick={() =>
+                        handleAction(area.name, "Ver checklist completo")
+                      }
                       className="text-xs font-bold text-dark-secondary hover:text-dark-primary hover:bg-zinc-100 px-3 py-2 rounded-xl transition-all cursor-pointer"
                     >
                       Checklist
                     </button>
-                    
+
                     <button
-                      onClick={() => handleAction(area.name, "Finalizar turno de mantenimiento")}
+                      onClick={() =>
+                        handleAction(
+                          area.name,
+                          "Finalizar turno de mantenimiento",
+                        )
+                      }
                       className="text-xs font-bold text-brand-blue hover:text-blue-700 bg-brand-blue/5 hover:bg-brand-blue/10 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
                     >
                       Completar
                       <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
-
                 </div>
-
               </div>
             );
           })
@@ -312,7 +328,6 @@ export default function CommonAreasPage() {
           </div>
         )}
       </div>
-
     </div>
   );
 }

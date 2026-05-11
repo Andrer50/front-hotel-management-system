@@ -216,3 +216,14 @@ body {
     @apply font-sans;
   }
 }
+
+/* Force solid white background for the sidebar in both desktop and mobile states */
+[data-slot="sidebar"], 
+[data-slot="sidebar-inner"], 
+[data-mobile="true"], 
+.bg-sidebar {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  --sidebar: #ffffff !important;
+  --sidebar-background: #ffffff !important;
+}
