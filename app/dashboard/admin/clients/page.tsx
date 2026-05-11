@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { CreateGuestDialog } from "@/presentation/dashboard/admin/clients/create-guest-dialog";
 
 // Interfaz para Huéspedes
 interface Guest {
@@ -97,6 +98,7 @@ export default function ReceptionGuestsPage() {
   const [guests, setGuests] = useState<Guest[]>(initialGuests);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Filtro de huéspedes interactivo
   const filteredGuests = useMemo(() => {
@@ -127,13 +129,11 @@ export default function ReceptionGuestsPage() {
   }, [filteredGuests]);
 
   const handleCreateGuest = () => {
-    toast.success("Módulo de Huéspedes Abierto", {
-      description: "Inicializando el sistema de registro de nuevos huéspedes premium.",
-      action: {
-        label: "Cargar",
-        onClick: () => {}
-      }
-    });
+    setIsCreateOpen(true);
+  };
+
+  const handleAddGuest = (newGuest: Guest) => {
+    setGuests((prev) => [newGuest, ...prev]);
   };
 
   const handleExportData = () => {
@@ -228,18 +228,18 @@ export default function ReceptionGuestsPage() {
       </div>
 
       {/* Barra de Filtros y Búsqueda */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 min-w-0">
         
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 flex-1 min-w-0">
           {/* Búsqueda */}
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative flex-1 max-w-sm min-w-0">
             <Search className="h-3.5 w-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-secondary/60" />
             <Input
               type="text"
               placeholder="Filtrar por nombre o email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white border-zinc-200 rounded-xl text-xs h-10 focus:border-brand-blue/30 transition-all shadow-xs"
+              className="pl-10 pr-4 py-2 bg-white border-zinc-200 rounded-xl text-xs h-10 focus:border-brand-blue/30 transition-all shadow-xs w-full min-w-0"
             />
           </div>
 
@@ -486,6 +486,12 @@ export default function ReceptionGuestsPage() {
         </div>
 
       </div>
+
+      <CreateGuestDialog
+        isOpen={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onAddGuest={handleAddGuest}
+      />
 
     </div>
   );
