@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import {
   Shield,
@@ -157,10 +158,13 @@ export function AdminSidebar() {
               asChild
               className="group flex items-center gap-3 px-4 py-5 rounded-xl text-[13px] font-semibold text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-all duration-200 h-10 cursor-pointer"
             >
-              <Link href="/">
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="w-full flex items-center gap-3 text-left"
+              >
                 <LogOut className="h-4.5 w-4.5 text-red-500 group-hover:text-red-600" />
                 <span>Cerrar sesión</span>
-              </Link>
+              </button>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

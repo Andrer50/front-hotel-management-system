@@ -43,6 +43,7 @@ El proyecto utiliza una separación estricta por dominios (módulos). Por ejempl
     data: T;
   }
   ```
+- **Manejo de Mutaciones (TanStack Query)**: **NUNCA utilices `try/catch` con `mutateAsync`** en los envíos de formularios. Utiliza SIEMPRE la función `mutate()` pasándole los callbacks `onSuccess` y `onError`. TanStack Query ya maneja internamente la captura de excepciones y evita código redundante.
 - **Rutas (Routing)**: Se usa React Router DOM a través de `<IonReactRouter>`. Las páginas nunca deben estar en la ruta raíz `/` directamente por convenciones de animación de Ionic (usar un `<Redirect>` hacia rutas nombradas como `/login` o `/home`).
 - **Nombres de Archivos**: Componentes React en `PascalCase` (`MiComponente.tsx`). Archivos de utilidades, hooks o actions en `camelCase` (`useMiHook.ts`, `actions.ts`).
 

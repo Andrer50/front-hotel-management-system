@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { 
   Mail, 
   Lock, 
@@ -15,19 +18,36 @@ import {
 } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      alert("Autenticación simulada con éxito. ¡Bienvenido al panel!");
-    }, 1500);
+
+    const result = await signIn("credentials", {
+      redirect: false,
+      // Django autentica con username; usamos el email como username
+      username: email,
+      password,
+    });
+
+    setIsLoading(false);
+
+    if (result?.error) {
+      toast.error(result.error === "CredentialsSignin"
+        ? "Credenciales inválidas. Verifica tu email y contraseña."
+        : result.error
+      );
+      return;
+    }
+
+    toast.success("¡Bienvenido al panel!");
+    router.push("/dashboard/admin");
   };
 
   return (
