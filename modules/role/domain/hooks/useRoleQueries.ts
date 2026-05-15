@@ -1,18 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { getRolesAction, getPermissionsAction } from "@/core/role/actions/roleActions";
+import {
+  getRolesAction,
+  getPermissionsAction,
+} from "@/core/role/actions/roleActions";
 
-export const useGetRolesQuery = (token?: string) => {
+export const useGetRolesQuery = () => {
   return useQuery({
     queryKey: ["roles"],
-    queryFn: () => getRolesAction(token!),
-    enabled: !!token,
+    queryFn: () => getRolesAction(),
   });
 };
 
-export const useGetPermissionsQuery = (token?: string) => {
+export const useGetPermissionsQuery = () => {
   return useQuery({
     queryKey: ["permissions"],
-    queryFn: () => getPermissionsAction(token!),
-    enabled: !!token,
+    queryFn: () => getPermissionsAction(),
   });
 };

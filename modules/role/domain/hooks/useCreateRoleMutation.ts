@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createRoleAction, CreateRoleRequest } from "@/core/role/actions/roleActions";
+import { createRoleAction } from "@/core/role/actions/roleActions";
+import { CreateRoleRequest } from "@/core/role/interfaces";
 
-export const useCreateRoleMutation = (token?: string) => {
+export const useCreateRoleMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateRoleRequest) => createRoleAction(token!, data),
+    mutationFn: (data: CreateRoleRequest) => createRoleAction(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
     },

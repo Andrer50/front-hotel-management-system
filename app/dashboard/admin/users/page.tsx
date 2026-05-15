@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { 
   Plus, 
   Sparkles, 
@@ -12,12 +13,15 @@ import {
   ChevronRight,
   CheckCircle2,
   CalendarDays,
-  UserCheck2
+  UserCheck2,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { CreateUserDialog } from "@/presentation/dashboard/admin/users/create-user-dialog";
+import { useGetUsersQuery } from "@/modules/user/domain/hooks/useUserQueries";
+import { User } from "@/core/user/interfaces";
 
 // Interfaces de datos para el Directorio de Personal
 interface PersonalMember {
@@ -31,75 +35,28 @@ interface PersonalMember {
   initials: string;
 }
 
-const initialStaff: PersonalMember[] = [
-  {
-    id: "1",
-    name: "Javier Mancini",
-    email: "j.mancini@grandconcierge.com",
-    role: "Jefe de Conserjería",
-    department: "Servicios al cliente",
-    status: "Activo",
-    avatarBg: "bg-blue-100 text-blue-600",
-    initials: "JM"
-  },
-  {
-    id: "2",
-    name: "Sofia Chen",
-    email: "s.chen@grandconcierge.com",
-    role: "Gerente Nocturno",
-    department: "Operaciones",
-    status: "Activo",
-    avatarBg: "bg-emerald-100 text-emerald-600",
-    initials: "SC"
-  },
-  {
-    id: "3",
-    name: "Arthur Morgan",
-    email: "a.morgan@grandconcierge.com",
-    role: "Supervisor de Valet",
-    department: "Servicios",
-    status: "En Vacaciones",
-    avatarBg: "bg-zinc-100 text-zinc-600",
-    initials: "AM"
-  },
-  {
-    id: "4",
-    name: "Marcus Thorne",
-    email: "m.thorne@grandconcierge.com",
-    role: "Gerente de Ingresos",
-    department: "Comercial",
-    status: "Activo",
-    avatarBg: "bg-amber-100 text-amber-600",
-    initials: "MT"
-  },
-  {
-    id: "5",
-    name: "Elena Rodríguez",
-    email: "e.rodriguez@grandconcierge.com",
-    role: "Directora de Operaciones",
-    department: "Operaciones",
-    status: "Activo",
-    avatarBg: "bg-indigo-100 text-indigo-600",
-    initials: "ER"
-  },
-  {
-    id: "6",
-    name: "Lucía Santos",
-    email: "l.santos@grandconcierge.com",
-    role: "Recepcionista Senior",
-    department: "Recepción",
-    status: "Activo",
-    avatarBg: "bg-pink-100 text-pink-600",
-    initials: "LS"
-  }
-];
-
 export default function UsersManagementPage() {
-  const [staff, setStaff] = useState<PersonalMember[]>(initialStaff);
+  const { data: session } = useSession();
   const [activeDepartmentFilter, setActiveDepartmentFilter] = useState<string>("Todos los Departamentos");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  const { data: users = [], isLoading } = useGetUsersQuery();
+
+  // Mapeo de usuarios del backend al formato de la UI
+  const staff = useMemo(() => {
+    return users.map((u) => ({
+      id: u.id.toString(),
+      name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.username,
+      email: u.email,
+      role: u.role_details?.name || "Sin Rol",
+      department: (u.role_details?.name || "Recepción") as any, 
+      status: "Activo" as const,
+      avatarBg: "bg-blue-100 text-blue-600",
+      initials: (u.firstName?.[0] || u.username?.[0] || "U").toUpperCase() + (u.lastName?.[0] || "").toUpperCase()
+    }));
+  }, [users]);
 
   // Filtro inteligente de personal por departamento y búsqueda
   const filteredStaff = useMemo(() => {
@@ -133,15 +90,29 @@ export default function UsersManagementPage() {
     setIsCreateOpen(true);
   };
 
-  const handleAddMember = (newMember: PersonalMember) => {
-    setStaff((prev) => [newMember, ...prev]);
-  };
-
   const handleActionMenu = (name: string) => {
     toast(`Opciones para ${name}`, {
       description: "Editar contrato, reasignar departamento o cambiar privilegios de acceso."
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-8 animate-fade-in pb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-pulse">
+          <div className="flex flex-col gap-3">
+            <div className="h-8 bg-zinc-200 rounded-xl w-48"></div>
+            <div className="h-4 bg-zinc-100 rounded-lg w-full max-w-lg mt-1"></div>
+          </div>
+          <div className="h-12 bg-blue-100 rounded-xl w-48"></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[400px]">
+          <div className="lg:col-span-8 bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs animate-pulse"></div>
+          <div className="lg:col-span-4 bg-[#002f6c] rounded-2xl p-6 shadow-xl animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in">
@@ -467,7 +438,6 @@ export default function UsersManagementPage() {
       <CreateUserDialog
         isOpen={isCreateOpen}
         onOpenChange={setIsCreateOpen}
-        onAddStaff={handleAddMember}
       />
 
     </div>

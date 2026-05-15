@@ -25,8 +25,7 @@ export function CreateRoleDialog({
   onOpenChange,
   availablePermissions,
 }: CreateRoleDialogProps) {
-  const { data: session } = useSession();
-  const createRoleMutation = useCreateRoleMutation(session?.accessToken);
+  const createRoleMutation = useCreateRoleMutation();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");

@@ -28,13 +28,10 @@ export default function RolesManagementPage() {
     permIds: number[];
   } | null>(null);
 
-  const { data: roles = [], isLoading: isLoadingRoles } = useGetRolesQuery(
-    session?.accessToken,
-  );
-  const { data: permissions = [], isLoading: isLoadingPermissions } =
-    useGetPermissionsQuery(session?.accessToken);
+  const { data: roles = [], isLoading: isLoadingRoles } = useGetRolesQuery();
+  const { data: permissions = [], isLoading: isLoadingPermissions } = useGetPermissionsQuery();
 
-  const updateRoleMutation = useUpdateRoleMutation(session?.accessToken);
+  const updateRoleMutation = useUpdateRoleMutation();
 
   const isLoading = isLoadingRoles || isLoadingPermissions;
 
@@ -86,6 +83,7 @@ export default function RolesManagementPage() {
       {
         onSuccess: () => {
           toast.success("Permisos actualizados correctamente");
+          setModifiedPerms(null);
         },
         onError: (e) => {
           toast.error(e.message || "Error al actualizar los permisos");

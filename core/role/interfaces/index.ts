@@ -9,3 +9,14 @@ export interface Role {
   name: string;
   permissions: Permission[];
 }
+
+export interface CreateRoleRequest {
+  name: string;
+  permission_ids: number[];
+}
+
+export interface UpdateRoleRequest {
+  id: number;
+  name?: string;
+  permission_ids: number[];
+}

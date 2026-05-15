@@ -1,38 +1,19 @@
 import { apiClient } from "@/lib/http-client";
-import { Role, Permission } from "../interfaces";
+import { Role, Permission, CreateRoleRequest, UpdateRoleRequest } from "../interfaces";
 
-export const getRolesAction = async (token: string): Promise<Role[]> => {
-  return apiClient.get<Role[]>("hotel/roles", {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+export const getRolesAction = async (): Promise<Role[]> => {
+  return apiClient.get<Role[]>("hotel/roles");
 };
 
-export const getPermissionsAction = async (token: string): Promise<Permission[]> => {
-  return apiClient.get<Permission[]>("hotel/permissions", {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+export const getPermissionsAction = async (): Promise<Permission[]> => {
+  return apiClient.get<Permission[]>("hotel/permissions");
 };
 
-export interface CreateRoleRequest {
-  name: string;
-  permission_ids: number[];
-}
-
-export const createRoleAction = async (token: string, request: CreateRoleRequest): Promise<void> => {
-  return apiClient.post<void>("hotel/roles", request, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+export const createRoleAction = async (request: CreateRoleRequest): Promise<void> => {
+  return apiClient.post<void>("hotel/roles", request);
 };
 
-export interface UpdateRoleRequest {
-  id: number;
-  name?: string;
-  permission_ids: number[];
-}
-
-export const updateRoleAction = async (token: string, request: UpdateRoleRequest): Promise<void> => {
+export const updateRoleAction = async (request: UpdateRoleRequest): Promise<void> => {
   const { id, ...data } = request;
-  return apiClient.patch<void>(`hotel/roles/${id}`, data, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  return apiClient.patch<void>(`hotel/roles/${id}`, data);
 };
