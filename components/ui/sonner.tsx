@@ -41,8 +41,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         classNames: {
           toast:
             "group toast group-[.toaster]:bg-white group-[.toaster]:text-dark-primary group-[.toaster]:border-zinc-100 group-[.toaster]:shadow-xl group-[.toaster]:rounded-2xl group-[.toaster]:p-4 group-[.toaster]:font-sans",
-          description: "group-[.toast]:text-inherit group-[.toast]:opacity-70 group-[.toast]:font-semibold group-[.toast]:text-[11px] group-[.toast]:leading-relaxed mt-1",
-          title: "group-[.toast]:text-inherit group-[.toast]:font-extrabold group-[.toast]:text-xs",
+          description: "group-[.toast]:!text-zinc-600 group-[.toast]:font-medium group-[.toast]:text-xs group-[.toast]:leading-relaxed mt-1",
+          title: "group-[.toast]:!text-dark-primary group-[.toast]:font-extrabold group-[.toast]:text-xs",
           success: "group-[.toaster]:!bg-emerald-50 group-[.toaster]:!border-emerald-200 group-[.toaster]:!text-emerald-900",
           error: "group-[.toaster]:!bg-red-50 group-[.toaster]:!border-red-200 group-[.toaster]:!text-red-900",
           warning: "group-[.toaster]:!bg-amber-50 group-[.toaster]:!border-amber-200 group-[.toaster]:!text-amber-900",

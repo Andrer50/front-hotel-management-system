@@ -21,3 +21,13 @@ export interface CreateUserRequest {
   phone: string;
   sede_asignada?: number;
 }
+
+export interface UpdateUserRequest {
+  id: number;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: number;
+  phone?: string;
+  sede_asignada?: number;
+}

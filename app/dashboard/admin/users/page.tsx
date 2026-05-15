@@ -2,24 +2,25 @@
 
 import { useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
-import { 
-  Plus, 
-  Sparkles, 
-  SlidersHorizontal, 
-  Filter, 
-  MoreVertical, 
-  Search, 
-  ChevronLeft, 
+import {
+  Plus,
+  Sparkles,
+  SlidersHorizontal,
+  Filter,
+  MoreVertical,
+  Search,
+  ChevronLeft,
   ChevronRight,
   CheckCircle2,
   CalendarDays,
   UserCheck2,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { CreateUserDialog } from "@/presentation/dashboard/admin/users/create-user-dialog";
+import { UpdateUserDialog } from "@/presentation/dashboard/admin/users/update-user-dialog";
 import { useGetUsersQuery } from "@/modules/user/domain/hooks/useUserQueries";
 import { User } from "@/core/user/interfaces";
 
@@ -29,7 +30,12 @@ interface PersonalMember {
   name: string;
   email: string;
   role: string;
-  department: "Servicios al cliente" | "Operaciones" | "Servicios" | "Comercial" | "Recepción";
+  department:
+    | "Servicios al cliente"
+    | "Operaciones"
+    | "Servicios"
+    | "Comercial"
+    | "Recepción";
   status: "Activo" | "En Vacaciones";
   avatarBg: string;
   initials: string;
@@ -37,10 +43,14 @@ interface PersonalMember {
 
 export default function UsersManagementPage() {
   const { data: session } = useSession();
-  const [activeDepartmentFilter, setActiveDepartmentFilter] = useState<string>("Todos los Departamentos");
+  const [activeDepartmentFilter, setActiveDepartmentFilter] = useState<string>(
+    "Todos los Departamentos",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const { data: users = [], isLoading } = useGetUsersQuery();
 
@@ -51,10 +61,12 @@ export default function UsersManagementPage() {
       name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.username,
       email: u.email,
       role: u.role_details?.name || "Sin Rol",
-      department: (u.role_details?.name || "Recepción") as any, 
+      department: (u.role_details?.name || "Recepción") as any,
       status: "Activo" as const,
       avatarBg: "bg-blue-100 text-blue-600",
-      initials: (u.firstName?.[0] || u.username?.[0] || "U").toUpperCase() + (u.lastName?.[0] || "").toUpperCase()
+      initials:
+        (u.firstName?.[0] || u.username?.[0] || "U").toUpperCase() +
+        (u.lastName?.[0] || "").toUpperCase(),
     }));
   }, [users]);
 
@@ -62,14 +74,17 @@ export default function UsersManagementPage() {
   const filteredStaff = useMemo(() => {
     return staff.filter((member) => {
       // Filtro de Departamento
-      const matchesDept = 
+      const matchesDept =
         activeDepartmentFilter === "Todos los Departamentos" ||
-        (activeDepartmentFilter === "Recepción" && member.department === "Recepción") ||
-        (activeDepartmentFilter === "Conserjería" && member.department === "Servicios al cliente") ||
-        (activeDepartmentFilter === "Operaciones" && member.department === "Operaciones");
+        (activeDepartmentFilter === "Recepción" &&
+          member.department === "Recepción") ||
+        (activeDepartmentFilter === "Conserjería" &&
+          member.department === "Servicios al cliente") ||
+        (activeDepartmentFilter === "Operaciones" &&
+          member.department === "Operaciones");
 
       // Filtro de Búsqueda de Texto
-      const matchesSearch = 
+      const matchesSearch =
         member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         member.role.toLowerCase().includes(searchQuery.toLowerCase());
@@ -82,7 +97,9 @@ export default function UsersManagementPage() {
   const stats = useMemo(() => {
     const total = filteredStaff.length;
     const activos = filteredStaff.filter((m) => m.status === "Activo").length;
-    const vacaciones = filteredStaff.filter((m) => m.status === "En Vacaciones").length;
+    const vacaciones = filteredStaff.filter(
+      (m) => m.status === "En Vacaciones",
+    ).length;
     return { total, activos, vacaciones };
   }, [filteredStaff]);
 
@@ -90,10 +107,12 @@ export default function UsersManagementPage() {
     setIsCreateOpen(true);
   };
 
-  const handleActionMenu = (name: string) => {
-    toast(`Opciones para ${name}`, {
-      description: "Editar contrato, reasignar departamento o cambiar privilegios de acceso."
-    });
+  const handleActionMenu = (id: string) => {
+    const userToUpdate = users.find((u) => u.id.toString() === id);
+    if (userToUpdate) {
+      setSelectedUser(userToUpdate);
+      setIsUpdateOpen(true);
+    }
   };
 
   if (isLoading) {
@@ -116,7 +135,6 @@ export default function UsersManagementPage() {
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in">
-      
       {/* Sección Superior: Título de Sección y Botón de Acción Principal */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1.5">
@@ -124,12 +142,13 @@ export default function UsersManagementPage() {
             Mantenimiento de Personal
           </h2>
           <p className="text-dark-secondary text-sm max-w-2xl leading-relaxed">
-            Gestione su equipo de hospitalidad, defina privilegios de acceso y supervise el estado operativo en todos los departamentos de lujo.
+            Gestione su equipo de hospitalidad, defina privilegios de acceso y
+            supervise el estado operativo en todos los departamentos de lujo.
           </p>
         </div>
 
         {/* Botón de Añadir Personal con estilo idéntico al de la imagen */}
-        <Button 
+        <Button
           onClick={handleAddStaff}
           className="bg-brand-blue hover:bg-blue-600 text-white font-semibold rounded-xl text-xs flex items-center gap-2 py-3.5 px-5 shadow-lg shadow-brand-blue/15 hover:shadow-brand-blue/25 transition-all duration-200 cursor-pointer w-fit self-start md:self-center"
         >
@@ -140,43 +159,44 @@ export default function UsersManagementPage() {
 
       {/* Grid de Tarjetas Operativas e IA */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
         {/* Tarjeta de Vista General Operativa */}
         <div className="col-span-1 lg:col-span-8 bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6 justify-between">
-          
           {/* Header de la tarjeta con filtros */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="font-bold text-[15px] tracking-tight text-dark-primary">
               Vista General Operativa
             </h3>
-            
+
             {/* Filtros horizontales en píldoras */}
             <div className="flex flex-wrap gap-1.5 bg-zinc-50 p-1 rounded-xl w-fit">
-              {["Todos los Departamentos", "Recepción", "Conserjería"].map((dept) => {
-                const isActive = activeDepartmentFilter === dept;
-                return (
-                  <button
-                    key={dept}
-                    onClick={() => {
-                      setActiveDepartmentFilter(dept);
-                      setCurrentPage(1);
-                    }}
-                    className={`text-[11px] font-bold px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
-                      isActive 
-                        ? "bg-[#ebfef2] text-[#00723a] shadow-xs" 
-                        : "text-dark-secondary hover:text-dark-primary hover:bg-zinc-100/50"
-                    }`}
-                  >
-                    {dept === "Todos los Departamentos" ? "Todos los Personal" : dept}
-                  </button>
-                );
-              })}
+              {["Todos los Departamentos", "Recepción", "Conserjería"].map(
+                (dept) => {
+                  const isActive = activeDepartmentFilter === dept;
+                  return (
+                    <button
+                      key={dept}
+                      onClick={() => {
+                        setActiveDepartmentFilter(dept);
+                        setCurrentPage(1);
+                      }}
+                      className={`text-[11px] font-bold px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
+                        isActive
+                          ? "bg-[#ebfef2] text-[#00723a] shadow-xs"
+                          : "text-dark-secondary hover:text-dark-primary hover:bg-zinc-100/50"
+                      }`}
+                    >
+                      {dept === "Todos los Departamentos"
+                        ? "Todos los Personal"
+                        : dept}
+                    </button>
+                  );
+                },
+              )}
             </div>
           </div>
 
           {/* Estadísticas de la Tarjeta */}
           <div className="grid grid-cols-3 gap-6 pt-2">
-            
             {/* Stat 1: Total */}
             <div className="flex flex-col gap-1 border-r border-zinc-100">
               <div className="flex items-baseline gap-1.5">
@@ -215,9 +235,7 @@ export default function UsersManagementPage() {
                 En Vacaciones
               </span>
             </div>
-
           </div>
-
         </div>
 
         {/* Tarjeta de Optimización por IA con gradiente premium */}
@@ -228,23 +246,22 @@ export default function UsersManagementPage() {
               Optimización de Recursos por IA
             </div>
             <p className="text-blue-100 text-[13px] leading-relaxed font-light mt-1.5">
-              Nuestra inteligencia de conserjería ahora predice picos de demanda de personal para los fines de semana de alta ocupación.
+              Nuestra inteligencia de conserjería ahora predice picos de demanda
+              de personal para los fines de semana de alta ocupación.
             </p>
           </div>
 
-          <button 
+          <button
             onClick={() => toast.info("Generando informe predictivo...")}
             className="text-[10px] font-extrabold tracking-widest uppercase mt-4 text-white hover:text-blue-200 flex items-center gap-1 hover:translate-x-1.5 transition-transform duration-200 cursor-pointer self-start"
           >
             Ver Perspectivas <span className="font-sans">&gt;</span>
           </button>
         </div>
-
       </div>
 
       {/* Sección del Directorio / Listado de Personal */}
       <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6">
-        
         {/* Cabecera del Listado con Filtros Rápidos */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 min-w-0">
           <div className="flex items-center gap-3 shrink-0">
@@ -258,7 +275,6 @@ export default function UsersManagementPage() {
 
           {/* Acciones del Listado */}
           <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto min-w-0">
-            
             {/* Buscador de personal en tabla */}
             <div className="relative flex-1 lg:flex-none min-w-0">
               <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-dark-secondary/60" />
@@ -307,14 +323,16 @@ export default function UsersManagementPage() {
             <tbody>
               {filteredStaff.length > 0 ? (
                 filteredStaff.map((member) => (
-                  <tr 
-                    key={member.id} 
+                  <tr
+                    key={member.id}
                     className="border-b border-zinc-50 hover:bg-zinc-50/50 transition-colors last:border-0"
                   >
                     {/* Celda: Perfil */}
                     <td className="py-4.5 pr-4">
                       <div className="flex items-center gap-3">
-                        <div className={`h-9 w-9 rounded-full ${member.avatarBg} flex items-center justify-center font-bold text-xs shadow-xs`}>
+                        <div
+                          className={`h-9 w-9 rounded-full ${member.avatarBg} flex items-center justify-center font-bold text-xs shadow-xs`}
+                        >
                           {member.initials}
                         </div>
                         <div className="flex flex-col">
@@ -360,7 +378,7 @@ export default function UsersManagementPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleActionMenu(member.name)}
+                        onClick={() => handleActionMenu(member.id)}
                         className="h-8 w-8 rounded-lg text-dark-secondary/60 hover:text-dark-primary hover:bg-zinc-100 cursor-pointer"
                       >
                         <MoreVertical className="h-4 w-4" />
@@ -370,8 +388,12 @@ export default function UsersManagementPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-xs font-medium text-dark-secondary">
-                    No se encontraron miembros del personal para el criterio especificado.
+                  <td
+                    colSpan={4}
+                    className="py-12 text-center text-xs font-medium text-dark-secondary"
+                  >
+                    No se encontraron miembros del personal para el criterio
+                    especificado.
                   </td>
                 </tr>
               )}
@@ -382,9 +404,10 @@ export default function UsersManagementPage() {
         {/* Paginación de Tabla */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-zinc-100/60 text-xs text-dark-secondary select-none">
           <span>
-            Mostrando 1-{filteredStaff.length} de {filteredStaff.length} en total
+            Mostrando 1-{filteredStaff.length} de {filteredStaff.length} en
+            total
           </span>
-          
+
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
@@ -395,14 +418,14 @@ export default function UsersManagementPage() {
               <ChevronLeft className="h-3.5 w-3.5" />
               Anterior
             </Button>
-            
+
             <Button
               size="sm"
               className="h-8 w-8 rounded-lg bg-brand-blue hover:bg-blue-600 text-white font-bold text-xs"
             >
               1
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -432,14 +455,14 @@ export default function UsersManagementPage() {
             </Button>
           </div>
         </div>
-
       </div>
 
-      <CreateUserDialog
-        isOpen={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
+      <CreateUserDialog isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      <UpdateUserDialog
+        isOpen={isUpdateOpen}
+        onOpenChange={setIsUpdateOpen}
+        user={selectedUser}
       />
-
     </div>
   );
 }

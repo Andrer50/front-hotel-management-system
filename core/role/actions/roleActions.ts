@@ -13,7 +13,7 @@ export const createRoleAction = async (request: CreateRoleRequest): Promise<void
   return apiClient.post<void>("hotel/roles", request);
 };
 
-export const updateRoleAction = async (request: UpdateRoleRequest): Promise<void> => {
+export const updateRoleAction = async (request: UpdateRoleRequest): Promise<Role> => {
   const { id, ...data } = request;
-  return apiClient.patch<void>(`hotel/roles/${id}`, data);
+  return apiClient.patch<Role>(`hotel/roles/${id}`, data);
 };
