@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSessionContext } from "@/context/session-context";
 import {
   ShieldCheck,
   ChevronRight,
@@ -20,7 +20,7 @@ import {
 import { useUpdateRoleMutation } from "@/modules/role/domain/hooks/useUpdateRoleMutation";
 
 export default function RolesManagementPage() {
-  const { data: session } = useSession();
+  const { session } = useSessionContext();
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [modifiedPerms, setModifiedPerms] = useState<{

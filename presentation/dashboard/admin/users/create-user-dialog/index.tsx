@@ -29,7 +29,6 @@ import {
   Phone,
   Loader2,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useCreateUserMutation } from "@/modules/user/domain/hooks/useCreateUserMutation";
 import { useGetRolesQuery } from "@/modules/role/domain/hooks/useRoleQueries";
 
@@ -42,7 +41,6 @@ export function CreateUserDialog({
   isOpen,
   onOpenChange,
 }: CreateUserDialogProps) {
-  const { data: session } = useSession();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");

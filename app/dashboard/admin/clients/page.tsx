@@ -1,23 +1,26 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  Calendar, 
-  Download, 
-  ChevronLeft, 
-  ChevronRight, 
-  Sparkles, 
-  Clock, 
+import {
+  Plus,
+  Search,
+  Filter,
+  Calendar,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Clock,
   UserPlus2,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { CreateGuestDialog } from "@/presentation/dashboard/admin/clients/create-guest-dialog";
+import { useGetGuestsQuery } from "@/modules/guest/domain/hooks/useGuestQueries";
+import { useDeleteGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
+import { Loader2 } from "lucide-react";
 
 // Interfaz para Huéspedes
 interface Guest {
@@ -40,7 +43,7 @@ const initialGuests: Guest[] = [
     totalStays: 18,
     status: "ACTIVE",
     avatarBg: "bg-blue-100 text-blue-600",
-    initials: "AT"
+    initials: "AT",
   },
   {
     id: "2",
@@ -50,7 +53,7 @@ const initialGuests: Guest[] = [
     totalStays: 5,
     status: "ACTIVE",
     avatarBg: "bg-emerald-100 text-emerald-600",
-    initials: "ER"
+    initials: "ER",
   },
   {
     id: "3",
@@ -60,7 +63,7 @@ const initialGuests: Guest[] = [
     totalStays: 2,
     status: "INACTIVE",
     avatarBg: "bg-zinc-100 text-zinc-600",
-    initials: "MW"
+    initials: "MW",
   },
   {
     id: "4",
@@ -70,7 +73,7 @@ const initialGuests: Guest[] = [
     totalStays: 21,
     status: "ACTIVE",
     avatarBg: "bg-pink-100 text-pink-600",
-    initials: "SJ"
+    initials: "SJ",
   },
   {
     id: "5",
@@ -80,7 +83,7 @@ const initialGuests: Guest[] = [
     totalStays: 1,
     status: "INACTIVE",
     avatarBg: "bg-amber-100 text-amber-600",
-    initials: "OL"
+    initials: "OL",
   },
   {
     id: "6",
@@ -90,40 +93,66 @@ const initialGuests: Guest[] = [
     totalStays: 12,
     status: "ACTIVE",
     avatarBg: "bg-indigo-100 text-indigo-600",
-    initials: "SM"
-  }
+    initials: "SM",
+  },
 ];
 
 export default function ReceptionGuestsPage() {
-  const [guests, setGuests] = useState<Guest[]>(initialGuests);
+  const { data: guestsData = [], isLoading } = useGetGuestsQuery();
+  const deleteGuestMutation = useDeleteGuestMutation();
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "ACTIVE" | "INACTIVE"
+  >("ALL");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  // Filtro de huéspedes interactivo
+  // Mapeo y Filtro de huéspedes interactivo
   const filteredGuests = useMemo(() => {
-    return guests.filter((guest) => {
-      const matchesStatus = statusFilter === "ALL" || guest.status === statusFilter;
-      const matchesSearch = 
+    // Mapeamos los datos del backend a la interfaz del frontend
+    const mappedGuests: Guest[] = guestsData.map((g) => ({
+      id: g.id.toString(),
+      name: `${g.nombre} ${g.apellido}`,
+      email: g.email,
+      lastCheckIn: "N/A", // El backend aún no provee esto en el modelo Huesped
+      totalStays: 0, // El backend aún no provee esto
+      status: "ACTIVE", // Por defecto activo
+      avatarBg: "bg-blue-100 text-blue-600",
+      initials: `${g.nombre[0]}${g.apellido[0]}`.toUpperCase(),
+    }));
+
+    return mappedGuests.filter((guest) => {
+      const matchesStatus =
+        statusFilter === "ALL" || guest.status === statusFilter;
+      const matchesSearch =
         guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         guest.email.toLowerCase().includes(searchQuery.toLowerCase());
 
       return matchesStatus && matchesSearch;
     });
-  }, [guests, statusFilter, searchQuery]);
+  }, [guestsData, statusFilter, searchQuery]);
 
   // KPIs dinámicos basados en filtros
   const kpis = useMemo(() => {
     const total = filteredGuests.length;
-    const activeCheckIns = filteredGuests.filter((g) => g.status === "ACTIVE").length;
+    const activeCheckIns = filteredGuests.filter(
+      (g) => g.status === "ACTIVE",
+    ).length;
     // Tasa lealtad simulada: huéspedes con más de 4 estancias
     const loyalCount = filteredGuests.filter((g) => g.totalStays >= 5).length;
-    const loyaltyRate = total > 0 ? ((loyalCount / total) * 100).toFixed(1) : "0.0";
-    
+    const loyaltyRate =
+      total > 0 ? ((loyalCount / total) * 100).toFixed(1) : "0.0";
+
     // Estancia promedio calculada dinámicamente
-    const avgStay = total > 0 
-      ? (filteredGuests.reduce((acc, curr) => acc + curr.totalStays, 0) / total / 3 + 2.5).toFixed(1)
-      : "0.0";
+    const avgStay =
+      total > 0
+        ? (
+            filteredGuests.reduce((acc, curr) => acc + curr.totalStays, 0) /
+              total /
+              3 +
+            2.5
+          ).toFixed(1)
+        : "0.0";
 
     return { total, activeCheckIns, loyaltyRate, avgStay };
   }, [filteredGuests]);
@@ -132,25 +161,37 @@ export default function ReceptionGuestsPage() {
     setIsCreateOpen(true);
   };
 
-  const handleAddGuest = (newGuest: Guest) => {
-    setGuests((prev) => [newGuest, ...prev]);
+  const handleAddGuest = () => {
+    // La mutación se encarga de invalidar y refrescar
+    setIsCreateOpen(false);
   };
 
   const handleExportData = () => {
     toast.info("Exportación en curso", {
-      description: "Generando archivo CSV del listado de huéspedes..."
+      description: "Generando archivo CSV del listado de huéspedes...",
     });
   };
 
   const handleViewDetails = (name: string) => {
     toast(`Ficha de Huésped: ${name}`, {
-      description: "Cargando historial de reservas, preferencias dietéticas e historial de consumos de bar."
+      description:
+        "Cargando historial de reservas, preferencias dietéticas e historial de consumos de bar.",
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <Loader2 className="h-10 w-10 text-brand-blue animate-spin" />
+        <p className="text-sm font-medium text-dark-secondary italic animate-pulse">
+          Sincronizando catálogo de huéspedes con el servidor...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8 animate-fade-in">
-      
       {/* Breadcrumbs superiores y Cabecera de Página */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-dark-secondary/60">
@@ -158,18 +199,20 @@ export default function ReceptionGuestsPage() {
           <span className="text-zinc-300 font-light">&gt;</span>
           <span className="text-brand-blue">GESTIÓN DE HUÉSPEDES</span>
         </div>
-        
+
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-1">
           <div className="flex flex-col gap-1">
             <h2 className="text-3xl font-extrabold tracking-tight text-dark-primary">
               Gestión de Huéspedes
             </h2>
             <p className="text-dark-secondary text-sm max-w-2xl leading-relaxed">
-              Controle los registros de huéspedes, supervise el historial de visitas y gestione el estado del ciclo de vida con precisión quirúrgica.
+              Controle los registros de huéspedes, supervise el historial de
+              visitas y gestione el estado del ciclo de vida con precisión
+              quirúrgica.
             </p>
           </div>
 
-          <Button 
+          <Button
             onClick={handleCreateGuest}
             className="bg-brand-blue hover:bg-blue-600 text-white font-semibold rounded-xl text-xs flex items-center gap-2 py-3.5 px-5 shadow-lg shadow-brand-blue/15 hover:shadow-brand-blue/25 transition-all duration-200 cursor-pointer w-fit self-start md:self-center"
           >
@@ -181,7 +224,6 @@ export default function ReceptionGuestsPage() {
 
       {/* Grid de KPI Cards de 4 Columnas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
         {/* KPI 1 */}
         <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
           <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
@@ -208,7 +250,9 @@ export default function ReceptionGuestsPage() {
             Tasa de Lealtad
           </span>
           <span className="text-3xl font-extrabold text-brand-blue tracking-tight mt-1">
-            {kpis.total === initialGuests.length ? "68.2%" : `${kpis.loyaltyRate}%`}
+            {kpis.total === initialGuests.length
+              ? "68.2%"
+              : `${kpis.loyaltyRate}%`}
           </span>
         </div>
 
@@ -221,15 +265,15 @@ export default function ReceptionGuestsPage() {
             <span className="text-3xl font-extrabold text-brand-blue tracking-tight">
               {kpis.total === initialGuests.length ? "4.2" : kpis.avgStay}
             </span>
-            <span className="text-xs text-dark-secondary font-medium lowercase">noches</span>
+            <span className="text-xs text-dark-secondary font-medium lowercase">
+              noches
+            </span>
           </div>
         </div>
-
       </div>
 
       {/* Barra de Filtros y Búsqueda */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 min-w-0">
-        
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 flex-1 min-w-0">
           {/* Búsqueda */}
           <div className="relative flex-1 max-w-sm min-w-0">
@@ -252,8 +296,8 @@ export default function ReceptionGuestsPage() {
                   key={status}
                   onClick={() => setStatusFilter(status)}
                   className={`text-[11px] font-bold px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
-                    isActive 
-                      ? "bg-white text-brand-blue shadow-xs" 
+                    isActive
+                      ? "bg-white text-brand-blue shadow-xs"
                       : "text-dark-secondary hover:text-dark-primary hover:bg-zinc-100/30"
                   }`}
                 >
@@ -284,12 +328,10 @@ export default function ReceptionGuestsPage() {
             <Download className="h-4 w-4" />
           </Button>
         </div>
-
       </div>
 
       {/* Contenedor de la Tabla */}
       <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6">
-        
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
@@ -305,14 +347,16 @@ export default function ReceptionGuestsPage() {
             <tbody>
               {filteredGuests.length > 0 ? (
                 filteredGuests.map((guest) => (
-                  <tr 
-                    key={guest.id} 
+                  <tr
+                    key={guest.id}
                     className="border-b border-zinc-50 hover:bg-zinc-50/40 transition-colors last:border-0"
                   >
                     {/* Celda: Nombre */}
                     <td className="py-4.5 pr-4">
                       <div className="flex items-center gap-3">
-                        <div className={`h-9 w-9 rounded-full ${guest.avatarBg} flex items-center justify-center font-bold text-xs shadow-xs`}>
+                        <div
+                          className={`h-9 w-9 rounded-full ${guest.avatarBg} flex items-center justify-center font-bold text-xs shadow-xs`}
+                        >
                           {guest.initials}
                         </div>
                         <span className="text-xs font-bold text-dark-primary">
@@ -354,13 +398,13 @@ export default function ReceptionGuestsPage() {
                     {/* Celda: Acciones (Stack Vertical "Ver" y "Perfil") */}
                     <td className="py-4.5 text-right text-xs">
                       <div className="flex flex-col items-end gap-1.5 pl-4">
-                        <button 
+                        <button
                           onClick={() => handleViewDetails(guest.name)}
                           className="text-brand-blue hover:text-blue-700 font-bold hover:underline transition-colors cursor-pointer"
                         >
                           Ver
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleViewDetails(guest.name)}
                           className="text-dark-secondary hover:text-dark-primary font-bold hover:underline transition-colors cursor-pointer text-[10px]"
                         >
@@ -372,7 +416,10 @@ export default function ReceptionGuestsPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-xs font-medium text-dark-secondary">
+                  <td
+                    colSpan={6}
+                    className="py-12 text-center text-xs font-medium text-dark-secondary"
+                  >
                     No se encontraron huéspedes para los filtros activos.
                   </td>
                 </tr>
@@ -384,9 +431,13 @@ export default function ReceptionGuestsPage() {
         {/* Paginación de Tabla */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-zinc-100/60 text-xs text-dark-secondary select-none">
           <span>
-            Mostrando 1-{filteredGuests.length} de {filteredGuests.length === initialGuests.length ? "1.240" : filteredGuests.length} resultados
+            Mostrando 1-{filteredGuests.length} de{" "}
+            {filteredGuests.length === initialGuests.length
+              ? "1.240"
+              : filteredGuests.length}{" "}
+            resultados
           </span>
-          
+
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
@@ -397,14 +448,14 @@ export default function ReceptionGuestsPage() {
               <ChevronLeft className="h-3.5 w-3.5" />
               Anterior
             </Button>
-            
+
             <Button
               size="sm"
               className="h-8 w-8 rounded-lg bg-brand-blue hover:bg-blue-600 text-white font-bold text-xs"
             >
               1
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -445,12 +496,10 @@ export default function ReceptionGuestsPage() {
             </Button>
           </div>
         </div>
-
       </div>
 
       {/* Grid de Reportes de Inteligencia y Actividad Reciente */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
         {/* Card 1: Perspectivas de Inteligencia */}
         <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-4">
           <div className="flex items-center gap-2.5 text-brand-blue font-bold text-xs tracking-wider uppercase">
@@ -460,7 +509,12 @@ export default function ReceptionGuestsPage() {
             Perspectivas de Inteligencia
           </div>
           <p className="text-dark-primary text-xs leading-relaxed font-medium">
-            La IA sugiere contactar a <span className="text-brand-blue font-bold cursor-pointer hover:underline">Alex Thompson</span> para actualizar su programa de lealtad. Ha superado las 15 estancias este trimestre.
+            La IA sugiere contactar a{" "}
+            <span className="text-brand-blue font-bold cursor-pointer hover:underline">
+              Alex Thompson
+            </span>{" "}
+            para actualizar su programa de lealtad. Ha superado las 15 estancias
+            este trimestre.
           </p>
         </div>
 
@@ -472,27 +526,31 @@ export default function ReceptionGuestsPage() {
             </div>
             Actividad Reciente
           </div>
-          
+
           <div className="flex flex-col gap-3 pt-1">
             <div className="flex justify-between items-center text-xs border-b border-zinc-50 pb-2.5 last:border-0 last:pb-0">
-              <span className="text-dark-primary font-medium">Nuevo Huésped registrado: <span className="font-bold">Sarah Jansens</span></span>
-              <span className="text-[10px] text-dark-secondary/60 font-semibold">hace 2h</span>
+              <span className="text-dark-primary font-medium">
+                Nuevo Huésped registrado:{" "}
+                <span className="font-bold">Sarah Jansens</span>
+              </span>
+              <span className="text-[10px] text-dark-secondary/60 font-semibold">
+                hace 2h
+              </span>
             </div>
             <div className="flex justify-between items-center text-xs pb-0">
-              <span className="text-dark-primary font-medium">Check-out finalizado: <span className="font-bold">Marcus Weber</span></span>
-              <span className="text-[10px] text-dark-secondary/60 font-semibold">hace 5h</span>
+              <span className="text-dark-primary font-medium">
+                Check-out finalizado:{" "}
+                <span className="font-bold">Marcus Weber</span>
+              </span>
+              <span className="text-[10px] text-dark-secondary/60 font-semibold">
+                hace 5h
+              </span>
             </div>
           </div>
         </div>
-
       </div>
 
-      <CreateGuestDialog
-        isOpen={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        onAddGuest={handleAddGuest}
-      />
-
+      <CreateGuestDialog isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} />
     </div>
   );
 }

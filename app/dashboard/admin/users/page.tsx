@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useSession } from "next-auth/react";
 import {
   Plus,
   Sparkles,
@@ -14,7 +13,6 @@ import {
   CheckCircle2,
   CalendarDays,
   UserCheck2,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,25 +22,7 @@ import { UpdateUserDialog } from "@/presentation/dashboard/admin/users/update-us
 import { useGetUsersQuery } from "@/modules/user/domain/hooks/useUserQueries";
 import { User } from "@/core/user/interfaces";
 
-// Interfaces de datos para el Directorio de Personal
-interface PersonalMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  department:
-    | "Servicios al cliente"
-    | "Operaciones"
-    | "Servicios"
-    | "Comercial"
-    | "Recepción";
-  status: "Activo" | "En Vacaciones";
-  avatarBg: string;
-  initials: string;
-}
-
 export default function UsersManagementPage() {
-  const { data: session } = useSession();
   const [activeDepartmentFilter, setActiveDepartmentFilter] = useState<string>(
     "Todos los Departamentos",
   );
