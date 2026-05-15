@@ -1,333 +1,226 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
-  Building2,
+  Plus,
+  Users,
+  Search,
+  CheckCircle2,
+  AlertCircle,
   Clock,
+  Filter,
+  MoreHorizontal,
+  MapPin,
   Calendar,
   User,
-  CheckCircle2,
-  Sparkles,
-  Search,
-  Plus,
-  SlidersHorizontal,
-  Dumbbell,
-  Compass,
-  Flame,
-  Waves,
-  ArrowRight,
-  LucideIcon,
+  ArrowUpRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-
-interface CommonArea {
-  id: string;
-  name: string;
-  category: "Interiores" | "Exteriores";
-  status: "EN PROCESO" | "PROGRAMADO" | "COMPLETADO";
-  time: string;
-  staffName: string;
-  icon: LucideIcon;
-  iconBg: string;
-  iconColor: string;
-  description: string;
-}
-
-const initialAreas: CommonArea[] = [
-  {
-    id: "1",
-    name: "Piscina Principal",
-    category: "Exteriores",
-    status: "EN PROCESO",
-    time: "Hoy, 08:30 AM",
-    staffName: "Carlos Ruiz",
-    icon: Waves,
-    iconBg: "bg-blue-50",
-    iconColor: "text-blue-600",
-    description: "Tratamiento de cloro y limpieza de filtros.",
-  },
-  {
-    id: "2",
-    name: "Gimnasio Nivel 2",
-    category: "Interiores",
-    status: "PROGRAMADO",
-    time: "Mañana, 07:00 AM",
-    staffName: "Elena Castro",
-    icon: Dumbbell,
-    iconBg: "bg-[#e2fbe8]",
-    iconColor: "text-[#00723a]",
-    description: "Desinfección de equipos y reposición de toallas.",
-  },
-  {
-    id: "3",
-    name: "Jardines Zen",
-    category: "Exteriores",
-    status: "PROGRAMADO",
-    time: "24 Oct, 10:00 AM",
-    staffName: "Roberto Gómez",
-    icon: Compass,
-    iconBg: "bg-amber-50",
-    iconColor: "text-amber-600",
-    description: "Poda artística y mantenimiento del estanque koi.",
-  },
-  {
-    id: "4",
-    name: "Área de Barbacoa",
-    category: "Exteriores",
-    status: "EN PROCESO",
-    time: "Hoy, 18:30 PM",
-    staffName: "Luis Méndez",
-    icon: Flame,
-    iconBg: "bg-red-50",
-    iconColor: "text-red-500",
-    description: "Limpieza profunda de parrillas y reposición de carbón.",
-  },
-];
+import {
+  useGetCommonAreasQuery,
+} from "@/modules/common-area/domain/hooks/useCommonAreaQueries";
+import { useDeleteCommonAreaMutation } from "@/modules/common-area/domain/hooks/useCommonAreaMutations";
+import { CommonArea, CommonAreaEstado } from "@/core/common-area/interfaces";
+import { CreateCommonAreaDialog } from "@/presentation/dashboard/admin/common-areas/create-common-area-dialog";
+import { UpdateCommonAreaDialog } from "@/presentation/dashboard/admin/common-areas/update-common-area-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CommonAreasPage() {
-  const [areas, setAreas] = useState<CommonArea[]>(initialAreas);
-  const [categoryFilter, setCategoryFilter] = useState<
-    "ALL" | "Interiores" | "Exteriores"
-  >("ALL");
+  const { data: areas = [], isLoading } = useGetCommonAreasQuery();
+  const { mutate: deleteArea } = useDeleteCommonAreaMutation();
+
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Todos");
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+  const [selectedArea, setSelectedArea] = useState<CommonArea | null>(null);
 
-  // Filtrado de áreas comunes
-  const filteredAreas = useMemo(() => {
-    return areas.filter((area) => {
-      const matchesCategory =
-        categoryFilter === "ALL" || area.category === categoryFilter;
-      const matchesSearch =
-        area.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        area.staffName.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [areas, categoryFilter, searchQuery]);
+  const categories = ["Todos", "Interiores", "Exteriores"];
 
-  const handleAction = (areaName: string, action: string) => {
-    toast(`Mantenimiento de ${areaName}`, {
-      description: `Operación: ${action} asignada al supervisor de turno.`,
-    });
+  const filteredAreas = areas.filter((area) => {
+    const matchesSearch = area.nombre.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "Todos" || area.categoria === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  const getStatusConfig = (status: CommonAreaEstado) => {
+    switch (status) {
+      case "DISPONIBLE":
+        return {
+          color: "bg-emerald-50 text-emerald-600",
+          label: "OPERATIVO",
+          dot: "bg-emerald-500",
+        };
+      case "MANTENIMIENTO":
+        return {
+          color: "bg-blue-50 text-blue-600",
+          label: "EN PROCESO",
+          dot: "bg-blue-500",
+        };
+      case "RESTRINGIDO":
+        return {
+          color: "bg-zinc-100 text-zinc-500",
+          label: "PROGRAMADO",
+          dot: "bg-zinc-400",
+        };
+      default:
+        return {
+          color: "bg-zinc-50 text-zinc-400",
+          label: "DESCONOCIDO",
+          dot: "bg-zinc-300",
+        };
+    }
   };
 
-  const handleCreateArea = () => {
-    toast.success("Nueva Área Registrada", {
-      description:
-        "Inicializando protocolo de mantenimiento preventivo para nueva locación.",
-    });
+  const handleDelete = (id: number) => {
+    if (confirm("¿Estás seguro de eliminar esta área?")) {
+      deleteArea(id);
+      setIsUpdateOpen(false);
+    }
   };
 
   return (
-    <div className="flex flex-col gap-8 animate-fade-in">
-      {/* Cabecera y botón principal */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-3xl font-extrabold tracking-tight text-dark-primary">
-            Mantenimiento de Áreas
-          </h2>
-          <p className="text-dark-secondary text-sm max-w-2xl leading-relaxed">
-            Optimización constante para su bienestar residencial. Controle las
-            rondas de limpieza y el estado operativo.
-          </p>
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8 space-y-8 pb-24">
+      {/* Header Cards (As per Image) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Main Status Card */}
+        <div className="lg:col-span-2 bg-[#0051b3] rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-900/20">
+          <div className="relative z-10 flex justify-between items-start">
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">Estado Global</span>
+                <h2 className="text-3xl font-bold tracking-tight">Mantenimiento de Áreas</h2>
+              </div>
+              <p className="text-blue-100/80 text-sm font-medium max-w-[240px] leading-relaxed">
+                Optimización constante para su bienestar residencial.
+              </p>
+            </div>
+            <div className="text-7xl font-bold tracking-tighter opacity-90">84%</div>
+          </div>
+          {/* Decorative Circle */}
+          <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
         </div>
 
-        <Button
-          onClick={handleCreateArea}
-          className="bg-brand-blue hover:bg-blue-600 text-white font-semibold rounded-xl text-xs flex items-center gap-2 py-3.5 px-5 shadow-lg shadow-brand-blue/15 transition-all cursor-pointer self-start md:self-center"
-        >
-          <Plus className="h-4.5 w-4.5" />
-          Registrar Área
-        </Button>
-      </div>
-
-      {/* Grid de Banner del Estado Global y Próximo Turno */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Banner 1 (Estado Global - Spans 2 cols) */}
-        <div className="bg-brand-blue rounded-2xl p-8 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative overflow-hidden lg:col-span-2 min-h-[150px] shadow-lg shadow-brand-blue/15">
-          {/* Fondo decorativo */}
-          <div className="absolute right-0 top-0 opacity-10 pointer-events-none">
-            <svg
-              width="300"
-              height="150"
-              viewBox="0 0 300 150"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="250" cy="50" r="100" stroke="white" strokeWidth="8" />
-            </svg>
+        {/* Next Shift Card */}
+        <div className="bg-white rounded-[2rem] p-8 flex flex-col justify-center items-center text-center space-y-4 border border-zinc-100 shadow-sm">
+          <div className="p-4 bg-blue-50 rounded-2xl">
+            <Clock className="h-8 w-8 text-[#0051b3]" />
           </div>
-
-          <div className="flex flex-col gap-2 relative z-10">
-            <span className="text-[10px] font-extrabold tracking-widest uppercase text-white/70">
-              ESTADO GLOBAL
-            </span>
-            <h3 className="text-2xl font-extrabold tracking-tight">
-              Mantenimiento de Áreas
-            </h3>
-            <p className="text-xs text-white/85 leading-relaxed font-medium max-w-sm">
-              Optimización constante para su bienestar residencial. Todas las
-              zonas críticas se encuentran bajo supervisión.
-            </p>
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Próximo Turno</span>
+            <div className="text-2xl font-bold text-zinc-900 uppercase">14:00 PM</div>
           </div>
-
-          <div className="text-right shrink-0 relative z-10 self-end sm:self-center">
-            <span className="text-5xl font-black tracking-tight">84%</span>
-          </div>
-        </div>
-
-        {/* Banner 2 (Próximo Turno) */}
-        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col justify-between items-center text-center min-h-[150px]">
-          <div className="bg-blue-50 text-brand-blue p-2.5 rounded-xl">
-            <Clock className="h-5 w-5" />
-          </div>
-
-          <div className="flex flex-col gap-1 mt-2">
-            <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
-              PRÓXIMO TURNO
-            </span>
-            <span className="text-2xl font-black text-dark-primary tracking-tight">
-              14:00 PM
-            </span>
-          </div>
-
-          <span className="text-[10px] text-dark-secondary font-semibold">
-            Ronda de supervisión general
-          </span>
         </div>
       </div>
 
-      {/* Píldoras de Categoría & Barra de Filtros */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Filtro de Categoría */}
-        <div className="flex bg-zinc-100 p-1 rounded-xl w-fit">
-          {(
-            [
-              { label: "Todos", value: "ALL" },
-              { label: "Interiores", value: "Interiores" },
-              { label: "Exteriores", value: "Exteriores" },
-            ] as const
-          ).map((cat) => {
-            const isActive = categoryFilter === cat.value;
-            return (
-              <button
-                key={cat.label}
-                onClick={() => setCategoryFilter(cat.value)}
-                className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all cursor-pointer ${
-                  isActive
-                    ? "bg-white text-brand-blue shadow-xs"
-                    : "text-dark-secondary hover:text-dark-primary"
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Buscador */}
-        <div className="relative w-full sm:w-72">
-          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-dark-secondary/60" />
-          <Input
-            type="text"
-            placeholder="Buscar área o supervisor..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-3 py-1.5 bg-white border-zinc-200 rounded-xl text-xs h-10 shadow-2xs focus:border-brand-blue/30"
-          />
-        </div>
+      {/* Tabs Filter (As per Image) */}
+      <div className="flex gap-2 p-1 bg-zinc-100/50 rounded-2xl w-fit">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setCategoryFilter(cat)}
+            className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              categoryFilter === cat
+                ? "bg-white text-[#0051b3] shadow-sm"
+                : "text-zinc-400 hover:text-zinc-600"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
-      {/* Listado de Tarjetas de Áreas Comunes */}
-      <div className="flex flex-col gap-4">
-        {filteredAreas.length > 0 ? (
+      {/* Areas List (As per Image) */}
+      <div className="space-y-3">
+        {isLoading ? (
+          [1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full rounded-3xl" />)
+        ) : filteredAreas.length > 0 ? (
           filteredAreas.map((area) => {
-            const IconComponent = area.icon;
+            const config = getStatusConfig(area.estado);
             return (
               <div
                 key={area.id}
-                className="bg-white border border-zinc-100 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-all duration-250 flex flex-col sm:flex-row sm:items-center justify-between gap-5 group"
+                onClick={() => {
+                  setSelectedArea(area);
+                  setIsUpdateOpen(true);
+                }}
+                className="bg-white hover:bg-zinc-50 transition-all p-4 rounded-[1.5rem] border border-zinc-100 flex items-center gap-6 group cursor-pointer shadow-sm hover:shadow-md"
               >
-                {/* Lado Izquierdo: Icono/Thumbnail & Información */}
-                <div className="flex items-center gap-5">
-                  <div
-                    className={`h-14 w-14 rounded-xl ${area.iconBg} ${area.iconColor} flex items-center justify-center shrink-0 border border-zinc-100 group-hover:scale-105 transition-transform duration-200`}
-                  >
-                    <IconComponent className="h-6 w-6 stroke-[1.8]" />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center gap-2.5">
-                      <h4 className="text-sm font-black text-dark-primary group-hover:text-brand-blue transition-colors">
-                        {area.name}
-                      </h4>
-                      <span className="text-[10px] font-extrabold text-dark-secondary/60 bg-zinc-100 px-2 py-0.5 rounded-md">
-                        {area.category}
-                      </span>
+                {/* Square Image */}
+                <div className="h-16 w-16 rounded-2xl overflow-hidden flex-shrink-0 bg-zinc-100 border border-zinc-50">
+                  {area.imagen ? (
+                    <img
+                      src={area.imagen.startsWith("http") ? area.imagen : `http://127.0.0.1:8000${area.imagen}`}
+                      alt={area.nombre}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <MapPin className="h-6 w-6 text-zinc-300" />
                     </div>
+                  )}
+                </div>
 
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] text-dark-secondary font-bold">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-dark-secondary/70" />
-                        {area.time}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <User className="h-3.5 w-3.5 text-dark-secondary/70" />
-                        {area.staffName}
-                      </span>
+                {/* Content */}
+                <div className="flex-1 space-y-1">
+                  <h3 className="font-bold text-zinc-900 text-base uppercase tracking-tight">{area.nombre}</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-zinc-400" />
+                      <span className="text-[11px] font-bold text-zinc-500">Hoy, 09:30 AM</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 text-zinc-400" />
+                      <span className="text-[11px] font-bold text-zinc-500">Carlos Ruiz</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Lado Derecho: Badge de Estado & Botones de Acciones */}
-                <div className="flex items-center justify-between sm:justify-end gap-5 border-t sm:border-t-0 pt-3 sm:pt-0 border-zinc-50">
-                  {/* Badge de Estado */}
-                  <span
-                    className={`text-[10px] font-black px-3.5 py-1.5 rounded-full ${
-                      area.status === "EN PROCESO"
-                        ? "bg-blue-50 text-brand-blue border border-blue-100"
-                        : area.status === "PROGRAMADO"
-                          ? "bg-zinc-100 text-zinc-500"
-                          : "bg-[#e2fbe8] text-[#00723a]"
-                    }`}
-                  >
-                    {area.status}
-                  </span>
+                {/* Badge */}
+                <div className={`px-4 py-1.5 rounded-lg ${config.color} flex items-center gap-2`}>
+                  <div className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{config.label}</span>
+                </div>
 
-                  {/* Acciones de Tarjeta */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        handleAction(area.name, "Ver checklist completo")
-                      }
-                      className="text-xs font-bold text-dark-secondary hover:text-dark-primary hover:bg-zinc-100 px-3 py-2 rounded-xl transition-all cursor-pointer"
-                    >
-                      Checklist
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        handleAction(
-                          area.name,
-                          "Finalizar turno de mantenimiento",
-                        )
-                      }
-                      className="text-xs font-bold text-brand-blue hover:text-blue-700 bg-brand-blue/5 hover:bg-brand-blue/10 px-3.5 py-2 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-                    >
-                      Completar
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+                <div className="p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ArrowUpRight className="h-5 w-5 text-zinc-300" />
                 </div>
               </div>
             );
           })
         ) : (
-          <div className="bg-white border border-zinc-100 rounded-2xl py-12 text-center text-xs font-semibold text-dark-secondary">
-            No se encontraron áreas comunes que coincidan con su filtro.
+          <div className="py-20 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center">
+              <Search className="h-8 w-8 text-zinc-300" />
+            </div>
+            <p className="text-zinc-400 font-bold text-xs uppercase tracking-widest">No se encontraron resultados</p>
           </div>
         )}
       </div>
+
+      {/* Floating Action Button (Optional for Add) */}
+      <button
+        onClick={() => setIsCreateOpen(true)}
+        className="fixed bottom-8 right-8 h-16 w-16 bg-[#0051b3] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer z-50"
+      >
+        <Plus className="h-8 w-8" />
+      </button>
+
+      {/* Dialogs */}
+      <CreateCommonAreaDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
+
+      <UpdateCommonAreaDialog
+        key={selectedArea?.id || "none"}
+        open={isUpdateOpen}
+        onOpenChange={setIsUpdateOpen}
+        area={selectedArea}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
