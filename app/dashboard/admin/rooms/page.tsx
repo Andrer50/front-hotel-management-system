@@ -10,19 +10,39 @@ import {
   User,
   Search,
   Check,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useGetRoomsQuery } from "@/modules/room/domain/hooks/useRoomQueries";
-import { Loader2, Plus } from "lucide-react";
+import { useGetPlantasQuery } from "@/modules/room/domain/hooks/usePlantaQueries";
+import { Loader2, Plus, PlusCircle } from "lucide-react";
 import { CreateRoomDialog } from "@/presentation/dashboard/admin/rooms/create-room-dialog";
+import { CreatePlantaDialog } from "@/presentation/dashboard/admin/rooms/create-planta-dialog";
+import { UpdateRoomDialog } from "@/presentation/dashboard/admin/rooms/update-room-dialog";
+import { Room, RoomEstado } from "@/core/room/interfaces";
 
 export default function RoomsManagementPage() {
-  const { data: roomsData = [], isLoading } = useGetRoomsQuery();
+  const { data: roomsData = [], isLoading: isLoadingRooms } =
+    useGetRoomsQuery();
+  const { data: plantas = [], isLoading: isLoadingPlantas } =
+    useGetPlantasQuery();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedFloor, setSelectedFloor] = useState<number | "ALL">("ALL");
+  const [isCreatePlantaDialogOpen, setIsCreatePlantaDialogOpen] =
+    useState(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+
+  const [selectedFloor, setSelectedFloor] = useState<string | "ALL">("ALL");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,19 +50,11 @@ export default function RoomsManagementPage() {
   // Filtros dinámicos basados directamente en la interfaz del Core
   const filteredRooms = useMemo(() => {
     return roomsData.filter((room) => {
-      const floorNum = parseInt(room.numero[0]) || 1;
       const matchesFloor =
-        selectedFloor === "ALL" || floorNum === selectedFloor;
+        selectedFloor === "ALL" || room.planta?.toString() === selectedFloor;
 
       // Mapeo simple para filtros de UI
-      const uiStatus =
-        room.estado === "DISPONIBLE"
-          ? "LISTA"
-          : room.estado === "OCUPADA"
-            ? "SUCIA"
-            : room.estado === "MANTENIMIENTO"
-              ? "MANTENIMIENTO"
-              : "LIMPIEZA";
+      const uiStatus: RoomEstado = room.estado;
 
       const matchesType =
         typeFilter === "ALL" ||
@@ -85,19 +97,52 @@ export default function RoomsManagementPage() {
     });
   };
 
+  const getStatusStyles = (status: RoomEstado | string) => {
+    switch (status) {
+      case "DISPONIBLE":
+        return {
+          badge: "bg-[#e2fbe8] text-[#00723a]",
+          border: "#00723a",
+          label: "Vacante",
+        };
+      case "OCUPADA":
+        return {
+          badge: "bg-zinc-100 text-zinc-600",
+          border: "#64748b",
+          label: "Ocupado",
+        };
+      case "LIMPIEZA":
+        return {
+          badge: "bg-blue-50 text-brand-blue",
+          border: "#095fe5",
+          label: "En Limpieza",
+        };
+      case "MANTENIMIENTO":
+        return {
+          badge: "bg-red-50 text-red-600",
+          border: "#ef4444",
+          label: "Fuera de Servicio",
+        };
+      case "SUCIA":
+      default:
+        return {
+          badge: "bg-amber-50 text-amber-600",
+          border: "#f59e0b",
+          label: "Sucia",
+        };
+    }
+  };
+
   const handleRoomClick = (roomNumber: string, status: string) => {
     toast(`Detalle de Habitación ${roomNumber}`, {
       description: `Estado: ${status}. Abriendo bitácora histórica de mantenimiento y ama de llaves.`,
     });
   };
 
-  if (isLoading) {
+  if (isLoadingRooms || isLoadingPlantas) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <Loader2 className="h-10 w-10 text-brand-blue animate-spin" />
-        <p className="text-sm font-medium text-dark-secondary italic animate-pulse">
-          Sincronizando estado de las habitaciones...
-        </p>
+      <div className="h-[80vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-blue" />
       </div>
     );
   }
@@ -221,67 +266,87 @@ export default function RoomsManagementPage() {
       <div className="flex flex-col gap-5 bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs">
         {/* Selector de Plantas */}
         <div className="flex border-b border-zinc-100 pb-1.5 overflow-x-auto gap-2">
-          {(
-            [
-              { label: "Todas las plantas", value: "ALL" },
-              { label: "Planta 1", value: 1 },
-              { label: "Planta 2", value: 2 },
-              { label: "Planta 3", value: 3 },
-              { label: "Ático", value: 4 },
-            ] as const
-          ).map((floorOpt) => {
-            const isActive = selectedFloor === floorOpt.value;
-            return (
-              <button
-                key={floorOpt.label}
-                onClick={() => setSelectedFloor(floorOpt.value)}
-                className={`text-xs font-extrabold px-4 py-2 transition-all cursor-pointer relative shrink-0 ${
-                  isActive
-                    ? "text-brand-blue"
-                    : "text-dark-secondary hover:text-dark-primary"
-                }`}
-              >
-                {floorOpt.label}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-blue rounded-full" />
-                )}
-              </button>
-            );
-          })}
+          <button
+            onClick={() => setSelectedFloor("ALL")}
+            className={`px-4 py-4 text-xs font-bold transition-all relative ${
+              selectedFloor === "ALL"
+                ? "text-blue-600"
+                : "text-dark-secondary hover:text-dark-primary"
+            }`}
+          >
+            Todas las plantas
+            {selectedFloor === "ALL" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
+            )}
+          </button>
+
+          {plantas.map((planta) => (
+            <button
+              key={planta.id}
+              onClick={() => setSelectedFloor(planta.id.toString())}
+              className={`px-4 py-4 text-xs font-bold transition-all relative ${
+                selectedFloor === planta.id.toString()
+                  ? "text-blue-600"
+                  : "text-dark-secondary hover:text-dark-primary"
+              }`}
+            >
+              {planta.nombre}
+              {selectedFloor === planta.id.toString() && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
+              )}
+            </button>
+          ))}
+
+          {/* Botón para Añadir Planta */}
+          <button
+            onClick={() => setIsCreatePlantaDialogOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 ml-2 my-auto text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100/50"
+            title="Crear Nueva Planta"
+          >
+            <PlusCircle className="h-3 w-3" />
+            NUEVA PLANTA
+          </button>
         </div>
 
         {/* Selectores de Tipo y Estado */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 justify-between">
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold text-dark-secondary">
-                Filtrar por:
-              </span>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="bg-zinc-50 border border-zinc-200 text-xs font-bold text-dark-primary px-3 py-1.5 rounded-lg focus:outline-none focus:border-brand-blue/30 cursor-pointer"
-              >
-                <option value="ALL">Tipo: Todos</option>
-                <option value="Suite Ejecutiva">Suite Ejecutiva</option>
-                <option value="Estándar King">Estándar King</option>
-                <option value="Deluxe Suite">Deluxe Suite</option>
-                <option value="Superior Queen">Superior Queen</option>
-                <option value="Gran Suite">Gran Suite</option>
-              </select>
+            <span className="text-[11px] font-bold text-dark-secondary">
+              Filtrar por:
+            </span>
+
+            <div className="w-44">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="h-9 text-[11px] font-bold rounded-xl border-zinc-100 bg-zinc-50/50">
+                  <span className="text-dark-secondary mr-1">Tipo:</span>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todos</SelectItem>
+                  <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+                  <SelectItem value="DOBLE">Doble</SelectItem>
+                  <SelectItem value="SUITE">Suite</SelectItem>
+                  <SelectItem value="FAMILIAR">Familiar</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-zinc-50 border border-zinc-200 text-xs font-bold text-dark-primary px-3 py-1.5 rounded-lg focus:outline-none focus:border-brand-blue/30 cursor-pointer"
-            >
-              <option value="ALL">Estado: Todos</option>
-              <option value="LISTA">LISTA</option>
-              <option value="LIMPIEZA">LIMPIEZA</option>
-              <option value="MANTENIMIENTO">MANTENIMIENTO</option>
-              <option value="SUCIA">SUCIA</option>
-            </select>
+            <div className="w-44">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-9 text-[11px] font-bold rounded-xl border-zinc-100 bg-zinc-50/50">
+                  <span className="text-dark-secondary mr-1">Estado:</span>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todos</SelectItem>
+                  <SelectItem value="DISPONIBLE">Lista / Vacante</SelectItem>
+                  <SelectItem value="OCUPADA">Ocupada</SelectItem>
+                  <SelectItem value="SUCIA">Sucia</SelectItem>
+                  <SelectItem value="LIMPIEZA">En Limpieza</SelectItem>
+                  <SelectItem value="MANTENIMIENTO">Mantenimiento</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="relative w-full sm:w-64">
@@ -301,29 +366,18 @@ export default function RoomsManagementPage() {
           {filteredRooms.length > 0 ? (
             filteredRooms.map((room) => {
               // Cálculos al vuelo para mantener la interfaz del Core intacta
-              const uiStatus =
-                room.estado === "DISPONIBLE"
-                  ? "LISTA"
-                  : room.estado === "OCUPADA"
-                    ? "SUCIA"
-                    : room.estado === "MANTENIMIENTO"
-                      ? "MANTENIMIENTO"
-                      : "LIMPIEZA";
+              const uiStatus = room.estado;
 
               return (
                 <div
                   key={room.id}
-                  onClick={() => handleRoomClick(room.numero, uiStatus)}
+                  onClick={() => {
+                    setSelectedRoom(room);
+                    setIsUpdateDialogOpen(true);
+                  }}
                   className="bg-white border border-zinc-100 rounded-xl p-4 shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[140px] group border-t-2"
                   style={{
-                    borderTopColor:
-                      uiStatus === "LISTA"
-                        ? "#00723a"
-                        : uiStatus === "LIMPIEZA"
-                          ? "#095fe5"
-                          : uiStatus === "MANTENIMIENTO"
-                            ? "#ef4444"
-                            : "#64748b",
+                    borderTopColor: getStatusStyles(uiStatus).border,
                   }}
                 >
                   <div className="flex items-start justify-between">
@@ -334,16 +388,10 @@ export default function RoomsManagementPage() {
                     {/* Badge de Estado */}
                     <span
                       className={`text-[9px] font-black px-2 py-0.5 rounded-md ${
-                        uiStatus === "LISTA"
-                          ? "bg-[#e2fbe8] text-[#00723a]"
-                          : uiStatus === "LIMPIEZA"
-                            ? "bg-blue-50 text-brand-blue"
-                            : uiStatus === "MANTENIMIENTO"
-                              ? "bg-red-50 text-red-600"
-                              : "bg-zinc-100 text-zinc-500"
+                        getStatusStyles(uiStatus).badge
                       }`}
                     >
-                      {uiStatus}
+                      {uiStatus === "DISPONIBLE" ? "LISTA" : uiStatus}
                     </span>
                   </div>
 
@@ -354,38 +402,47 @@ export default function RoomsManagementPage() {
 
                     {/* Estado de Ocupación o Notas */}
                     <div className="flex items-center gap-1.5 mt-2 text-[10px] text-dark-secondary font-semibold">
-                      {uiStatus === "LISTA" && (
-                        <span className="flex items-center gap-1">
+                      {uiStatus === "DISPONIBLE" && (
+                        <span className="flex items-center gap-1.5 text-emerald-600">
                           <User className="h-3 w-3 opacity-60" />
                           Vacante
+                        </span>
+                      )}
+
+                      {uiStatus === "OCUPADA" && (
+                        <span className="flex items-center gap-1.5 text-zinc-600">
+                          <User className="h-3 w-3 opacity-60" />
+                          Ocupada
                         </span>
                       )}
 
                       {uiStatus === "LIMPIEZA" && (
                         <div className="flex flex-col gap-1 w-full">
                           <span className="flex items-center gap-1 text-brand-blue font-bold">
-                            <User className="h-3 w-3 opacity-60" />
-                            Personal Asignado
+                            <Brush className="h-3 w-3 opacity-60" />
+                            En Limpieza...
                           </span>
-                          <div className="w-full bg-zinc-100 h-1 rounded-full overflow-hidden">
+                          <div className="w-full bg-zinc-100 h-1 rounded-full overflow-hidden mt-1">
                             <div
                               className="bg-brand-blue h-full rounded-full animate-pulse"
                               style={{ width: "65%" }}
                             />
                           </div>
-                          <span className="text-[9px] text-dark-secondary/70">
-                            est. 20 min
-                          </span>
                         </div>
                       )}
 
+                      {uiStatus === "SUCIA" && (
+                        <span className="flex items-center gap-1.5 text-amber-600 font-bold">
+                          <AlertTriangle className="h-3 w-3 opacity-60" />
+                          Sucia
+                        </span>
+                      )}
+
                       {uiStatus === "MANTENIMIENTO" && (
-                        <div className="flex flex-col gap-0.5 text-red-600 font-bold">
-                          <span className="flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3" />
-                            Revisión Técnica
-                          </span>
-                        </div>
+                        <span className="flex items-center gap-1.5 text-red-600 font-bold">
+                          <Settings2 className="h-3 w-3 opacity-60" />
+                          Mantenimiento
+                        </span>
                       )}
 
                       {uiStatus === "SUCIA" && (
@@ -539,6 +596,16 @@ export default function RoomsManagementPage() {
       <CreateRoomDialog
         isOpen={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
+      />
+      <CreatePlantaDialog
+        isOpen={isCreatePlantaDialogOpen}
+        onOpenChange={setIsCreatePlantaDialogOpen}
+      />
+      <UpdateRoomDialog
+        key={selectedRoom?.id || "none"}
+        isOpen={isUpdateDialogOpen}
+        onOpenChange={setIsUpdateDialogOpen}
+        room={selectedRoom}
       />
     </div>
   );

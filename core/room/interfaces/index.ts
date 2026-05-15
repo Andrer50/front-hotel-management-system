@@ -1,22 +1,34 @@
+export interface Planta {
+  id: number;
+  nombre: string;
+  numero: number;
+}
+
+export type RoomTipo = 'INDIVIDUAL' | 'DOBLE' | 'SUITE' | 'FAMILIAR';
+export type RoomEstado = 'DISPONIBLE' | 'OCUPADA' | 'MANTENIMIENTO' | 'SUCIA' | 'LIMPIEZA';
+
 export interface Room {
   id: number;
   sede?: number;
+  planta?: number;
+  planta_details?: Planta;
   numero: string;
-  tipo: 'INDIVIDUAL' | 'DOBLE' | 'SUITE' | 'FAMILIAR';
+  tipo: RoomTipo;
   capacidad: number;
   precio_base: string;
-  estado: 'DISPONIBLE' | 'OCUPADA' | 'MANTENIMIENTO' | 'SUCIA';
+  estado: RoomEstado;
   tipo_display?: string;
   estado_display?: string;
 }
 
 export interface CreateRoomRequest {
   sede?: number;
+  planta?: number;
   numero: string;
-  tipo: string;
+  tipo: RoomTipo;
   capacidad: number;
   precio_base: number;
-  estado: string;
+  estado: RoomEstado;
 }
 
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {

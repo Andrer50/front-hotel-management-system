@@ -27,8 +27,11 @@ import {
   Sparkles,
   Loader2,
   PlusCircle,
+  Layers,
 } from "lucide-react";
 import { useCreateRoomMutation } from "@/modules/room/domain/hooks/useRoomMutations";
+import { useGetPlantasQuery } from "@/modules/room/domain/hooks/usePlantaQueries";
+import { RoomEstado, RoomTipo } from "@/core/room/interfaces";
 
 interface CreateRoomDialogProps {
   isOpen: boolean;
@@ -39,13 +42,15 @@ export function CreateRoomDialog({
   isOpen,
   onOpenChange,
 }: CreateRoomDialogProps) {
+  const { data: plantas = [] } = useGetPlantasQuery();
   const createRoomMutation = useCreateRoomMutation();
 
   const [numero, setNumero] = useState("");
-  const [tipo, setTipo] = useState("INDIVIDUAL");
+  const [plantaId, setPlantaId] = useState<string>("");
+  const [tipo, setTipo] = useState<RoomTipo>("INDIVIDUAL");
   const [capacidad, setCapacidad] = useState("1");
   const [precioBase, setPrecioBase] = useState("");
-  const [estado, setEstado] = useState("DISPONIBLE");
+  const [estado, setEstado] = useState<RoomEstado>("DISPONIBLE");
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -70,6 +75,7 @@ export function CreateRoomDialog({
     createRoomMutation.mutate(
       {
         numero,
+        planta: plantaId ? Number(plantaId) : undefined,
         tipo,
         capacidad: Number(capacidad),
         precio_base: Number(precioBase),
@@ -152,7 +158,10 @@ export function CreateRoomDialog({
               <Label className="text-xs font-bold text-dark-primary flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-blue-600" /> Tipo
               </Label>
-              <Select value={tipo} onValueChange={setTipo}>
+              <Select
+                value={tipo}
+                onValueChange={(val) => setTipo(val as RoomTipo)}
+              >
                 <SelectTrigger className="h-10 text-xs rounded-xl border-zinc-200">
                   <SelectValue />
                 </SelectTrigger>
@@ -164,6 +173,24 @@ export function CreateRoomDialog({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs font-bold text-dark-primary flex items-center gap-1.5">
+              <Layers className="h-3.5 w-3.5 text-blue-600" /> Planta / Piso
+            </Label>
+            <Select value={plantaId} onValueChange={setPlantaId}>
+              <SelectTrigger className="h-10 text-xs rounded-xl border-zinc-200">
+                <SelectValue placeholder="Seleccionar planta" />
+              </SelectTrigger>
+              <SelectContent>
+                {plantas.map((p) => (
+                  <SelectItem key={p.id} value={p.id.toString()}>
+                    {p.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -210,7 +237,10 @@ export function CreateRoomDialog({
             <Label className="text-xs font-bold text-dark-primary">
               Estado Inicial
             </Label>
-            <Select value={estado} onValueChange={setEstado}>
+            <Select
+              value={estado}
+              onValueChange={(val) => setEstado(val as RoomEstado)}
+            >
               <SelectTrigger className="h-10 text-xs rounded-xl border-zinc-200">
                 <SelectValue />
               </SelectTrigger>
