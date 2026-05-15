@@ -14,6 +14,7 @@ interface DjangoUser {
   first_name: string;
   last_name: string;
   role: string;
+  permissions?: string[];
   phone?: string;
   status?: string;
 }
@@ -73,6 +74,7 @@ const authOptions: NextAuthOptions = {
             profilePicture: "",
             phone: user.phone || "",
             role: user.role,
+            permissions: user.permissions || [],
             status: user.status || "ACTIVE",
             accessToken: access,
             refreshToken: refresh,
@@ -101,6 +103,7 @@ const authOptions: NextAuthOptions = {
         token.name = user.name;
         token.phone = user.phone;
         token.role = user.role;
+        token.permissions = user.permissions;
         token.status = user.status;
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
@@ -123,6 +126,7 @@ const authOptions: NextAuthOptions = {
         name: token.name,
         phone: token.phone,
         role: token.role,
+        permissions: token.permissions,
         status: token.status,
       };
       return session;

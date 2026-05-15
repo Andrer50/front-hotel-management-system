@@ -8,6 +8,7 @@ declare module "next-auth" {
 		profilePicture: string;
 		phone: string;
 		role: string;
+		permissions?: string[];
 		status: string;
 		accessToken: string;
 		refreshToken: string;
@@ -22,6 +23,7 @@ declare module "next-auth" {
 			name: string;
 			phone: string;
 			role: string;
+			permissions?: string[];
 			status: string;
 		};
 		accessToken: string;
@@ -37,6 +39,7 @@ declare module "next-auth/jwt" {
 		name: string;
 		phone: string;
 		role: string;
+		permissions?: string[];
 		status: string;
 		accessToken: string;
 		refreshToken: string;

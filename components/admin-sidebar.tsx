@@ -62,6 +62,11 @@ const navigationItems = [
     href: "/dashboard/admin/inventory",
     icon: Package,
   },
+  {
+    name: "Roles",
+    href: "/dashboard/admin/roles",
+    icon: Shield,
+  },
   { name: "Comercial", href: "/dashboard/admin/commercial", icon: Briefcase },
   {
     name: "Estadísticas",
@@ -84,10 +89,10 @@ export function AdminSidebar() {
           </div>
           <div>
             <h1 className="font-extrabold text-[15px] tracking-tight text-dark-primary leading-tight">
-              Grand Concierge
+              ASTURIAS SUITES
             </h1>
             <p className="text-[10px] font-bold text-brand-blue/70 tracking-widest uppercase mt-0.5">
-              Panel de Lujo
+              Sistema de Gestión
             </p>
           </div>
         </div>
