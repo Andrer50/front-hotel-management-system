@@ -64,6 +64,15 @@ export interface Incidencia {
     fecha_resolucion: string | null;
 }
 
+export interface CreateIncidenciaRequest {
+    titulo: string;
+    descripcion: string;
+    habitacion: number;
+    asignado_a?: number | null;
+    prioridad: 'ALTA' | 'MEDIA' | 'BAJA';
+    reportado_por: number;
+}
+
 export interface CreateLimpiezaRequest {
     habitacion: number;
     personal_limpieza: number | null;
