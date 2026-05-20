@@ -3,7 +3,7 @@ export interface Sede {
   nombre: string;
 }
 
-export type CommonAreaEstado = "DISPONIBLE" | "MANTENIMIENTO" | "RESTRINGIDO";
+export type CommonAreaEstado = "DISPONIBLE" | "OCUPADA" | "MANTENIMIENTO" | "SUCIA" | "RESTRINGIDO";
 
 export interface CommonArea {
   id: number;
@@ -17,6 +17,7 @@ export interface CommonArea {
   imagen?: string | null;
   categoria?: string | null;
   descripcion?: string | null;
+  is_active: boolean;
 }
 
 export interface CreateCommonAreaRequest {
@@ -27,6 +28,7 @@ export interface CreateCommonAreaRequest {
   categoria?: string;
   descripcion?: string;
   imagen?: File | null;
+  is_active?: boolean;
 }
 
 export interface UpdateCommonAreaRequest extends Partial<CreateCommonAreaRequest> {
