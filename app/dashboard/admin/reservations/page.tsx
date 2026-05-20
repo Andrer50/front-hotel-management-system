@@ -69,11 +69,11 @@ export default function ReservationsPage() {
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
 
-  const { data: reservations = [], isLoading: isLoadingReservations, refetch } = useGetReservationsQuery();
+  const { data: reservations = [] as any[], isLoading: isLoadingReservations, refetch } = useGetReservationsQuery();
   const { data: stats = {}, isLoading: isLoadingStats } = useGetStatsQuery();
 
   const filteredReservations = useMemo(() => {
-    return reservations.filter((res: any) => {
+    return (reservations as any[]).filter((res: any) => {
       const matchesStatus = statusFilter === "ALL" || res.estado === statusFilter;
       const matchesSearch =
         res.huesped_nombre?.toLowerCase().includes(searchQuery.toLowerCase()) ||

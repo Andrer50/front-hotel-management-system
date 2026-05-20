@@ -14,7 +14,7 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   "/dashboard/admin/common-areas": "can_manage_rooms",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
