@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useCreateCommonAreaMutation } from "@/modules/common-area/domain/hooks/useCommonAreaMutations";
 import { CommonAreaEstado } from "@/core/common-area/interfaces";
-import { ImagePlus, Loader2, X, UploadCloud } from "lucide-react";
+import { Loader2, X, UploadCloud } from "lucide-react";
 
 interface CreateCommonAreaDialogProps {
   open: boolean;
@@ -97,7 +97,7 @@ export const CreateCommonAreaDialog = ({
 
         <div className="p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            {/* Left Column: Form Inputs */}
+            {/* Formulario */}
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -152,6 +152,8 @@ export const CreateCommonAreaDialog = ({
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl border-zinc-100 shadow-xl">
                       <SelectItem value="DISPONIBLE">Disponible</SelectItem>
+                      <SelectItem value="OCUPADA">Ocupada</SelectItem>
+                      <SelectItem value="SUCIA">Sucia</SelectItem>
                       <SelectItem value="MANTENIMIENTO">Mantenimiento</SelectItem>
                       <SelectItem value="RESTRINGIDO">Restringido</SelectItem>
                     </SelectContent>
@@ -172,7 +174,7 @@ export const CreateCommonAreaDialog = ({
               </div>
             </div>
 
-            {/* Right Column: Image Upload */}
+            {/* Subida de Imagen */}
             <div className="space-y-2">
               <Label className="text-[10px] font-bold text-dark-secondary uppercase tracking-widest ml-1">
                 Foto de Referencia
@@ -222,7 +224,7 @@ export const CreateCommonAreaDialog = ({
             </div>
           </div>
 
-          {/* Footer Actions */}
+          {/* Botones */}
           <div className="flex gap-4 mt-10">
             <Button
               variant="ghost"
