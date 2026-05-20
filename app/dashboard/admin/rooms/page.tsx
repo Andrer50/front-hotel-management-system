@@ -336,7 +336,7 @@ export default function RoomsManagementPage() {
                       : getStatusStyles(uiStatus).border,
                   }}
                 >
-                  {/* 👇 Badge flotante solo si está desactivada */}
+                  {/* Badge flotante solo si está desactivada */}
                   {!room.is_active && (
                     <div className="absolute inset-0 rounded-xl flex items-end justify-center pb-3 pointer-events-none">
                       <span className="bg-zinc-800/80 text-white text-[9px] font-black px-2.5 py-1 rounded-full tracking-widest uppercase">
@@ -369,7 +369,7 @@ export default function RoomsManagementPage() {
                       {room.tipo_display || room.tipo}
                     </span>
                     <div className="flex items-center gap-1.5 mt-2 text-[10px] text-dark-secondary font-semibold">
-                      {/* 👇 Si está desactivada, reemplaza todo el contenido de estado */}
+                      {/* Si está desactivada, reemplaza todo el contenido de estado */}
                       {!room.is_active ? (
                         <span className="flex items-center gap-1.5 text-zinc-400 font-bold">
                           <PowerOff className="h-3 w-3 opacity-60" /> Sin servicio
