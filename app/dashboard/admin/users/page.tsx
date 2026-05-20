@@ -73,16 +73,11 @@ export default function UsersManagementPage() {
     });
   }, [staff, activeDepartmentFilter, searchQuery]);
 
-  // Cálculos de KPIs dinámicos
+  // Cálculos de KPIs dinámicos (CORREGIDO)
   const stats = useMemo(() => {
     const total = filteredStaff.length;
-    const activos = filteredStaff.filter((m) => {
-      const stat = m.status as string;
-      return stat === "ACTIVE" || stat === "Activo";
-    }).length;
-    const vacaciones = filteredStaff.filter(
-      (m) => (m.status as string) === "En Vacaciones",
-    ).length;
+    const activos = filteredStaff.filter((m) => m.status === "Activo").length;
+    const vacaciones = 0; // CORREGIDO: Temporal hasta definir el estado en el backend
     return { total, activos, vacaciones };
   }, [filteredStaff]);
 
@@ -351,7 +346,7 @@ export default function UsersManagementPage() {
                       ) : (
                         <span className="inline-flex items-center gap-1.5 bg-zinc-100 text-zinc-600 text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs">
                           <span className="h-1.5 w-1.5 rounded-full bg-zinc-400" />
-                          En Vacaciones
+                          Vacaciones
                         </span>
                       )}
                     </td>
