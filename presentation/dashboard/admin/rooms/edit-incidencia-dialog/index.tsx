@@ -22,6 +22,7 @@ import { useState } from "react";
 import { Incidencia } from "@/core/room/interfaces";
 import { useGetPersonalMantenimientoQuery } from "@/modules/room/domain/hooks/useIncidenciaQueries";
 import { useUpdateIncidenciaMutation, useDeleteIncidenciaMutation } from "@/modules/room/domain/hooks/useHabitacionesIncidenciaMutations";
+import { useSessionContext } from "@/context/session-context";
 
 interface EditIncidenciaDialogProps {
     isOpen: boolean;
@@ -37,11 +38,16 @@ export function EditIncidenciaDialog({
     const { data: personal = [] } = useGetPersonalMantenimientoQuery();
     const updateMutation = useUpdateIncidenciaMutation();
     const deleteMutation = useDeleteIncidenciaMutation();
+    const { session } = useSessionContext();
 
     const [personalId, setPersonalId] = useState<string>(
         incidencia?.asignado_a_details?.id?.toString() ?? ""
     );
     const [confirmDelete, setConfirmDelete] = useState(false);
+
+    const canResolve = 
+    session?.user?.role === "Administrador" ||
+    session?.user?.permissions?.includes("can_do_maintenance");
 
     const isResolved =
         incidencia?.estado === "RESUELTO" || incidencia?.estado === "CANCELADO";
@@ -175,7 +181,7 @@ export function EditIncidenciaDialog({
                 {/* Formulario */}
                 <form onSubmit={handleReassign} className="p-6 flex flex-col gap-4">
 
-                    {/* Descripción (solo lectura) */}
+                    {/* Descripción */}
                     {incidencia.descripcion && (
                         <div className="bg-zinc-50 rounded-xl p-3 border border-zinc-100">
                             <p className="text-[10px] font-extrabold text-dark-secondary/60 uppercase tracking-wider mb-1">
@@ -218,8 +224,18 @@ export function EditIncidenciaDialog({
                         )}
                     </div>
 
+                    {!isResolved && !canResolve && (
+                        <div className="flex items-center gap-2.5 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
+                            <AlertTriangle className="h-4 w-4 text-zinc-400 shrink-0" />
+                            <p className="text-[11px] font-semibold text-zinc-500 leading-relaxed">
+                                No tienes permisos para resolver o eliminar esta incidencia.
+                                Contacta a un Administrador o técnico de Mantenimiento.
+                            </p>
+                        </div>
+                    )}
+
                     {/* Botón resolver */}
-                    {!isResolved && (
+                    {!isResolved && canResolve && (
                         <>
                             <div className="flex items-center gap-3">
                                 <div className="h-px flex-1 bg-zinc-100" />
@@ -245,46 +261,48 @@ export function EditIncidenciaDialog({
                     )}
 
                     {/* Eliminar — confirmación en dos pasos */}
-                    {!confirmDelete ? (
-                        <button
-                            type="button"
-                            onClick={() => setConfirmDelete(true)}
-                            disabled={isPending}
-                            className="w-full h-9 flex items-center justify-center gap-2 text-red-500 hover:text-red-600 text-[11px] font-extrabold rounded-xl border border-red-100 hover:border-red-200 hover:bg-red-50 transition-all disabled:opacity-40"
-                        >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Eliminar incidencia
-                        </button>
-                    ) : (
-                        <div className="rounded-xl border border-red-200 bg-red-50 p-3 flex flex-col gap-2">
-                            <p className="text-xs font-bold text-red-600 text-center">
-                                ¿Eliminar esta incidencia?
-                            </p>
-                            <p className="text-[10px] text-red-400 font-semibold text-center">
-                                Esta acción no se puede deshacer.
-                            </p>
-                            <div className="flex gap-2 mt-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setConfirmDelete(false)}
-                                    className="flex-1 h-8 text-[11px] font-bold rounded-lg border border-zinc-200 text-dark-secondary hover:bg-zinc-50 transition-colors"
-                                >
-                                    No, volver
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleDelete}
-                                    disabled={deleteMutation.isPending}
-                                    className="flex-1 h-8 text-[11px] font-extrabold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50"
-                                >
-                                    {deleteMutation.isPending ? (
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin mx-auto" />
-                                    ) : (
-                                        "Sí, eliminar"
-                                    )}
-                                </button>
+                    {canResolve && (
+                        !confirmDelete ? (
+                            <button
+                                type="button"
+                                onClick={() => setConfirmDelete(true)}
+                                disabled={isPending}
+                                className="w-full h-9 flex items-center justify-center gap-2 text-red-500 hover:text-red-600 text-[11px] font-extrabold rounded-xl border border-red-100 hover:border-red-200 hover:bg-red-50 transition-all disabled:opacity-40"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                Eliminar incidencia
+                            </button>
+                        ) : (
+                            <div className="rounded-xl border border-red-200 bg-red-50 p-3 flex flex-col gap-2">
+                                <p className="text-xs font-bold text-red-600 text-center">
+                                    ¿Eliminar esta incidencia?
+                                </p>
+                                <p className="text-[10px] text-red-400 font-semibold text-center">
+                                    Esta acción no se puede deshacer.
+                                </p>
+                                <div className="flex gap-2 mt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setConfirmDelete(false)}
+                                        className="flex-1 h-8 text-[11px] font-bold rounded-lg border border-zinc-200 text-dark-secondary hover:bg-zinc-50 transition-colors"
+                                    >
+                                        No, volver
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        disabled={deleteMutation.isPending}
+                                        className="flex-1 h-8 text-[11px] font-extrabold rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50"
+                                    >
+                                        {deleteMutation.isPending ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin mx-auto" />
+                                        ) : (
+                                            "Sí, eliminar"
+                                        )}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        )
                     )}
 
                     <DialogFooter className="mt-1 gap-2">
@@ -296,7 +314,7 @@ export function EditIncidenciaDialog({
                         >
                             Cerrar
                         </Button>
-                        {!isResolved && (
+                        {!isResolved && canResolve && (
                             <Button
                                 type="submit"
                                 disabled={isPending || !personalId || personalId === "none"}

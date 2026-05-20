@@ -31,6 +31,8 @@ import {
   AlertTriangle,
   Brush,
   Clock,
+  Power,
+  PowerOff,
 } from "lucide-react";
 import { useUpdateRoomMutation } from "@/modules/room/domain/hooks/useRoomMutations";
 import { useGetPlantasQuery } from "@/modules/room/domain/hooks/usePlantaQueries";
@@ -60,6 +62,7 @@ export function UpdateRoomDialog({
   const [estado, setEstado] = useState<RoomEstado>(
     room?.estado || "DISPONIBLE",
   );
+  const [isActive, setIsActive] = useState<boolean>(room?.is_active ?? true);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -74,6 +77,7 @@ export function UpdateRoomDialog({
         capacidad: Number(capacidad),
         precio_base: Number(precioBase),
         estado,
+        is_active: isActive,
       },
       {
         onSuccess: () => {
@@ -109,6 +113,31 @@ export function UpdateRoomDialog({
         },
       );
     }
+  };
+
+  {/* Toggle de Activación */}
+  const handleToggleActive = () => {
+    if (!room) return;
+    const newValue = !isActive;
+    setIsActive(newValue);
+
+    updateRoomMutation.mutate(
+      { id: room.id, is_active: newValue },
+      {
+        onSuccess: () => {
+          toast.success(newValue ? "Habitación activada" : "Habitación desactivada", {
+            description: newValue
+              ? `La habitación ${room.numero} está operativa nuevamente.`
+              : `La habitación ${room.numero} fue desactivada del sistema.`,
+          });
+        },
+        onError: () => {
+          // Revertir el estado local si falla
+          setIsActive(!newValue);
+          toast.error("No se pudo cambiar el estado de activación.");
+        },
+      },
+    );
   };
 
   if (!room) return null;
@@ -281,6 +310,42 @@ export function UpdateRoomDialog({
                 className="rounded-xl border-zinc-200 h-10 text-xs"
               />
             </div>
+          </div>
+
+          <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+            isActive
+              ? "bg-emerald-50 border-emerald-200"
+              : "bg-zinc-100 border-zinc-200"
+          }`}>
+            <div className="flex flex-col gap-0.5">
+              <span className={`text-xs font-extrabold ${isActive ? "text-emerald-700" : "text-zinc-500"}`}>
+                {isActive ? "Habitación Activa" : "Habitación Desactivada"}
+              </span>
+              <span className="text-[10px] text-zinc-400 font-medium">
+                {isActive
+                  ? "Visible y disponible para reservas."
+                  : "Oculta del sistema. No acepta reservas."}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleToggleActive}
+              disabled={updateRoomMutation.isPending}
+              className={`relative flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all duration-300 ${
+                isActive
+                  ? "bg-emerald-600 hover:bg-red-500 text-white shadow-md shadow-emerald-600/20"
+                  : "bg-zinc-700 hover:bg-emerald-600 text-white shadow-md"
+              }`}
+            >
+              {updateRoomMutation.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : isActive ? (
+                <><PowerOff className="h-3.5 w-3.5" /> Desactivar</>
+              ) : (
+                <><Power className="h-3.5 w-3.5" /> Activar</>
+              )}
+            </button>
           </div>
 
           <DialogFooter className="mt-4 gap-2">
