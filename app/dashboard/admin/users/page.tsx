@@ -76,9 +76,12 @@ export default function UsersManagementPage() {
   // Cálculos de KPIs dinámicos
   const stats = useMemo(() => {
     const total = filteredStaff.length;
-    const activos = filteredStaff.filter((m) => m.status === "Activo").length;
+    const activos = filteredStaff.filter((m) => {
+      const stat = m.status as string;
+      return stat === "ACTIVE" || stat === "Activo";
+    }).length;
     const vacaciones = filteredStaff.filter(
-      (m) => m.status === "En Vacaciones",
+      (m) => (m.status as string) === "En Vacaciones",
     ).length;
     return { total, activos, vacaciones };
   }, [filteredStaff]);

@@ -4,12 +4,12 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        // Excluimos las rutas internas de NextAuth y pasamos las peticiones al backend Django bajo el prefijo /api/
-        source: "/api/:path((?!auth/(?:session|signin|signout|providers|callback|csrf|_log)).*)*",
-        destination: `${process.env.BACKEND_URL}/api/:path*`,
+        source: "/api/:path((?!auth/).*)",
+        destination: `${process.env.BACKEND_URL || "http://localhost:8000"}/api/:path*`,
       },
     ];
   },
+
 };
 
 export default nextConfig;

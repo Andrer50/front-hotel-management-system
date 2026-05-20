@@ -18,6 +18,7 @@ import {
   useGetPermissionsQuery,
 } from "@/modules/role/domain/hooks/useRoleQueries";
 import { useUpdateRoleMutation } from "@/modules/role/domain/hooks/useUpdateRoleMutation";
+import { permissionTranslations } from "@/modules/role/features/constants";
 
 export default function RolesManagementPage() {
   const { session } = useSessionContext();
@@ -169,6 +170,10 @@ export default function RolesManagementPage() {
       </div>
     );
   }
+
+  const getPermissionInfo = (codename: string) => {
+    return permissionTranslations[codename] || { title: codename, desc: "Sin descripción disponible." };
+  };
 
   return (
     <div className="flex flex-col gap-8 animate-fade-in pb-8">
@@ -334,6 +339,7 @@ export default function RolesManagementPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {permissions.map((perm) => {
                   const isActive = currentPermIds.includes(perm.id);
+                  const info = getPermissionInfo(perm.codename);
                   return (
                     <div
                       key={perm.id}
@@ -341,10 +347,10 @@ export default function RolesManagementPage() {
                     >
                       <div className="flex flex-col gap-1 max-w-[280px]">
                         <span className="text-[13px] font-bold text-dark-primary">
-                          {perm.name}
+                          {info.title}
                         </span>
                         <span className="text-[11px] font-medium text-dark-secondary leading-snug">
-                          Codename: {perm.codename}
+                          {info.desc}
                         </span>
                       </div>
 

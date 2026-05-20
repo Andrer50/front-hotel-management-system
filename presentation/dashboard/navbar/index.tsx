@@ -30,10 +30,6 @@ export const DashboardNavbar = () => {
       <div className="flex items-center gap-3 md:gap-6">
         {/* Notificaciones & Ajustes */}
         <div className="flex items-center gap-1 md:gap-3 text-dark-secondary">
-          <button className="p-2 hover:bg-zinc-50 rounded-xl transition-all duration-200 text-dark-secondary/80 hover:text-dark-primary relative cursor-pointer">
-            <Bell className="h-4.5 w-4.5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" />
-          </button>
           <button className="p-2 hover:bg-zinc-50 rounded-xl transition-all duration-200 text-dark-secondary/80 hover:text-dark-primary cursor-pointer">
             <Settings className="h-4.5 w-4.5" />
           </button>
