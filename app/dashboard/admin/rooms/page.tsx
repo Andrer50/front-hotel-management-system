@@ -336,7 +336,7 @@ export default function RoomsManagementPage() {
                       : getStatusStyles(uiStatus).border,
                   }}
                 >
-                  {/* Badge flotante solo si está desactivada */}
+                  {/* Badge flotante - solo si está desactivada */}
                   {!room.is_active && (
                     <div className="absolute inset-0 rounded-xl flex items-end justify-center pb-3 pointer-events-none">
                       <span className="bg-zinc-800/80 text-white text-[9px] font-black px-2.5 py-1 rounded-full tracking-widest uppercase">
