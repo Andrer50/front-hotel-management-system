@@ -19,6 +19,7 @@ export interface Room {
   estado: RoomEstado;
   tipo_display?: string;
   estado_display?: string;
+  is_active: boolean;
 }
 
 export interface CreateRoomRequest {
@@ -29,6 +30,7 @@ export interface CreateRoomRequest {
   capacidad: number;
   precio_base: number;
   estado: RoomEstado;
+  is_active?: boolean;
 }
 
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {

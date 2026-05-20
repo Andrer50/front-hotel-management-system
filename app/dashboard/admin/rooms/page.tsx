@@ -11,6 +11,7 @@ import {
   Search,
   Check,
   Settings2,
+  PowerOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ export default function RoomsManagementPage() {
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
 
   const [isAssignLimpiezaOpen, setIsAssignLimpiezaOpen] = useState(false);
   const [roomForLimpieza, setRoomForLimpieza] = useState<Room | null>(null);
@@ -62,15 +64,18 @@ export default function RoomsManagementPage() {
   const filteredRooms = useMemo(() => {
     return roomsData.filter((room) => {
       const matchesFloor = selectedFloor === "ALL" || room.planta?.toString() === selectedFloor;
-      const uiStatus: RoomEstado = room.estado;
       const matchesType = typeFilter === "ALL" || room.tipo === typeFilter || room.tipo_display === typeFilter;
-      const matchesStatus = statusFilter === "ALL" || uiStatus === statusFilter;
+      const matchesStatus = statusFilter === "ALL" || room.estado === statusFilter;
       const matchesSearch =
         room.numero.includes(searchQuery) ||
         (room.tipo_display || "").toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesFloor && matchesType && matchesStatus && matchesSearch;
+      const matchesActive =
+        activeFilter === "ALL" ||
+        (activeFilter === "ACTIVE" && room.is_active) ||
+        (activeFilter === "INACTIVE" && !room.is_active);
+      return matchesFloor && matchesType && matchesStatus && matchesSearch && matchesActive;
     });
-  }, [roomsData, selectedFloor, typeFilter, statusFilter, searchQuery]);
+  }, [roomsData, selectedFloor, typeFilter, statusFilter, searchQuery, activeFilter]);
 
   const stats = useMemo(() => {
     const total = roomsData.length;
@@ -274,6 +279,19 @@ export default function RoomsManagementPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="w-44">
+              <Select value={activeFilter} onValueChange={(val) => setActiveFilter(val as "ALL" | "ACTIVE" | "INACTIVE")}>
+                <SelectTrigger className="h-9 text-[11px] font-bold rounded-xl border-zinc-100 bg-zinc-50/50">
+                  <span className="text-dark-secondary mr-1">Activación:</span>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todas</SelectItem>
+                  <SelectItem value="ACTIVE">Activas</SelectItem>
+                  <SelectItem value="INACTIVE">Desactivadas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="relative w-full sm:w-64">
             <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-dark-secondary/60" />
@@ -300,7 +318,6 @@ export default function RoomsManagementPage() {
                       setRoomForLimpieza(room);
                       setIsAssignLimpiezaOpen(true);
                     } else if (room.estado === "MANTENIMIENTO") {
-                      // ✅ Abre el dialog de mantenimiento
                       setRoomForMantenimiento(room);
                       setIsAssignMantenimientoOpen(true);
                     } else {
@@ -308,56 +325,93 @@ export default function RoomsManagementPage() {
                       setIsUpdateDialogOpen(true);
                     }
                   }}
-                  className="bg-white border border-zinc-100 rounded-xl p-4 shadow-2xs hover:shadow-xs transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[140px] group border-t-2"
-                  style={{ borderTopColor: getStatusStyles(uiStatus).border }}
+                  className={`relative bg-white border border-zinc-100 rounded-xl p-4 shadow-2xs transition-all duration-200 cursor-pointer flex flex-col justify-between min-h-[140px] group border-t-2 ${
+                    !room.is_active
+                      ? "opacity-50 grayscale hover:opacity-70"
+                      : "hover:shadow-xs"
+                  }`}
+                  style={{
+                    borderTopColor: !room.is_active
+                      ? "#a1a1aa"
+                      : getStatusStyles(uiStatus).border,
+                  }}
                 >
+                  {/* Badge flotante - solo si está desactivada */}
+                  {!room.is_active && (
+                    <div className="absolute inset-0 rounded-xl flex items-end justify-center pb-3 pointer-events-none">
+                      <span className="bg-zinc-800/80 text-white text-[9px] font-black px-2.5 py-1 rounded-full tracking-widest uppercase">
+                        Desactivada
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-start justify-between">
                     <span className="text-sm font-black text-dark-primary group-hover:text-brand-blue transition-colors">
                       {room.numero}
                     </span>
-                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-md ${getStatusStyles(uiStatus).badge}`}>
-                      {uiStatus === "DISPONIBLE" ? "LISTA" : uiStatus}
+                    <span
+                      className={`text-[9px] font-black px-2 py-0.5 rounded-md ${
+                        !room.is_active
+                          ? "bg-zinc-100 text-zinc-400"
+                          : getStatusStyles(uiStatus).badge
+                      }`}
+                    >
+                      {!room.is_active
+                        ? "INACTIVA"
+                        : uiStatus === "DISPONIBLE"
+                        ? "LISTA"
+                        : uiStatus}
                     </span>
                   </div>
+
                   <div className="flex flex-col gap-0.5 mt-3">
                     <span className="text-[11px] font-extrabold text-dark-primary truncate">
                       {room.tipo_display || room.tipo}
                     </span>
                     <div className="flex items-center gap-1.5 mt-2 text-[10px] text-dark-secondary font-semibold">
-                      {uiStatus === "DISPONIBLE" && (
-                        <span className="flex items-center gap-1.5 text-emerald-600">
-                          <User className="h-3 w-3 opacity-60" /> Vacante
+                      {/* Si está desactivada, reemplaza todo el contenido de estado */}
+                      {!room.is_active ? (
+                        <span className="flex items-center gap-1.5 text-zinc-400 font-bold">
+                          <PowerOff className="h-3 w-3 opacity-60" /> Sin servicio
                         </span>
-                      )}
-                      {uiStatus === "OCUPADA" && (
-                        <span className="flex items-center gap-1.5 text-zinc-600">
-                          <User className="h-3 w-3 opacity-60" /> Ocupada
-                        </span>
-                      )}
-                      {uiStatus === "LIMPIEZA" && (
-                        <div className="flex flex-col gap-1 w-full">
-                          <span className="flex items-center gap-1 text-brand-blue font-bold">
-                            <Brush className="h-3 w-3 opacity-60" /> En Limpieza...
-                          </span>
-                          <div className="w-full bg-zinc-100 h-1 rounded-full overflow-hidden mt-1">
-                            <div className="bg-brand-blue h-full rounded-full animate-pulse" style={{ width: "65%" }} />
-                          </div>
-                        </div>
-                      )}
-                      {uiStatus === "SUCIA" && (
-                        <span className="flex items-center gap-1.5 text-amber-600 font-bold">
-                          <AlertTriangle className="h-3 w-3 opacity-60" /> Sucia
-                        </span>
-                      )}
-                      {uiStatus === "MANTENIMIENTO" && (
-                        <span className="flex items-center gap-1.5 text-red-600 font-bold">
-                          <Settings2 className="h-3 w-3 opacity-60" /> Mantenimiento
-                        </span>
-                      )}
-                      {uiStatus === "SUCIA" && (
-                        <span className="flex items-center gap-1 text-slate-500 font-bold">
-                          <User className="h-3 w-3 opacity-60" /> Ocupado
-                        </span>
+                      ) : (
+                        <>
+                          {uiStatus === "DISPONIBLE" && (
+                            <span className="flex items-center gap-1.5 text-emerald-600">
+                              <User className="h-3 w-3 opacity-60" /> Vacante
+                            </span>
+                          )}
+                          {uiStatus === "OCUPADA" && (
+                            <span className="flex items-center gap-1.5 text-zinc-600">
+                              <User className="h-3 w-3 opacity-60" /> Ocupada
+                            </span>
+                          )}
+                          {uiStatus === "LIMPIEZA" && (
+                            <div className="flex flex-col gap-1 w-full">
+                              <span className="flex items-center gap-1 text-brand-blue font-bold">
+                                <Brush className="h-3 w-3 opacity-60" /> En Limpieza...
+                              </span>
+                              <div className="w-full bg-zinc-100 h-1 rounded-full overflow-hidden mt-1">
+                                <div className="bg-brand-blue h-full rounded-full animate-pulse" style={{ width: "65%" }} />
+                              </div>
+                            </div>
+                          )}
+                          {uiStatus === "SUCIA" && (
+                            <span className="flex items-center gap-1.5 text-amber-600 font-bold">
+                              <AlertTriangle className="h-3 w-3 opacity-60" /> Sucia
+                            </span>
+                          )}
+                          {uiStatus === "MANTENIMIENTO" && (
+                            <span className="flex items-center gap-1.5 text-red-600 font-bold">
+                              <Settings2 className="h-3 w-3 opacity-60" /> Mantenimiento
+                            </span>
+                          )}
+                          {uiStatus === "SUCIA" && (
+                            <span className="flex items-center gap-1 text-slate-500 font-bold">
+                              <User className="h-3 w-3 opacity-60" /> Ocupado
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
