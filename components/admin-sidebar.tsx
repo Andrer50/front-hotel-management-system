@@ -19,6 +19,7 @@ import {
   BedDouble,
   Building2,
   Package,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -51,6 +52,11 @@ const navigationItems = [
     name: "Habitaciones",
     href: "/dashboard/admin/rooms",
     icon: BedDouble,
+  },
+  {
+    name: "Incidencias",
+    href: "/dashboard/admin/incidencias",
+    icon: AlertTriangle,
   },
   {
     name: "Áreas Comunes",
