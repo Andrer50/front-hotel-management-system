@@ -1,5 +1,5 @@
 import { Role, Status } from "@/core/shared";
-import { UserResponse } from "@/core/user/interfaces";
+import { User } from "@/core/user/interfaces";
 
 export interface RegisterAuthenticationRequest {
 	firstName: string;
@@ -12,7 +12,7 @@ export interface RegisterAuthenticationRequest {
 	status: Status;
 }
 
-export interface RegisterAuthenticationResponse extends Omit<UserResponse, "authId" | "createdAt" | "updatedAt"> {
+export interface RegisterAuthenticationResponse extends Omit<User, "authId" | "createdAt" | "updatedAt"> {
 	token: string;
 }
 

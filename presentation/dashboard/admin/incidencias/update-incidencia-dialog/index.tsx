@@ -125,10 +125,10 @@ export function UpdateIncidenciaDialog({
       descripcion: descripcion.trim(),
       prioridad,
       estado,
-      habitacion: hasHabitacion ? Number(habitacionId) : null,
-      area_comun: hasArea ? Number(areaComunId) : null,
+      habitacion: hasHabitacion ? Number(habitacionId) : undefined,
+      area_comun: hasArea ? Number(areaComunId) : undefined,
       asignado_a:
-        personalId && personalId !== "none" ? Number(personalId) : null,
+        personalId && personalId !== "none" ? Number(personalId) : undefined,
     };
   };
 

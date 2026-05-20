@@ -70,7 +70,7 @@ export default function ReservationsPage() {
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
 
   const { data: reservations = [] as any[], isLoading: isLoadingReservations, refetch } = useGetReservationsQuery();
-  const { data: stats = {}, isLoading: isLoadingStats } = useGetStatsQuery();
+  const { data: stats = {} as any, isLoading: isLoadingStats } = useGetStatsQuery();
 
   const filteredReservations = useMemo(() => {
     return (reservations as any[]).filter((res: any) => {
@@ -231,7 +231,7 @@ export default function ReservationsPage() {
           </span>
           <div className="flex items-end justify-between mt-2">
             <span className="text-3xl font-extrabold text-brand-blue tracking-tight">
-              {reservations.length}
+              {(reservations as any[]).length}
             </span>
             <CalendarDays className="h-5 w-5 text-brand-blue" />
           </div>
@@ -357,7 +357,7 @@ export default function ReservationsPage() {
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-zinc-100/60 text-xs text-dark-secondary">
-          <span>Mostrando {filteredReservations.length} de {reservations.length} reservas</span>
+          <span>Mostrando {filteredReservations.length} de {(reservations as any[]).length} reservas</span>
           <div className="flex items-center gap-1">
             <button className="text-dark-secondary hover:text-dark-primary font-bold disabled:opacity-50" disabled>
               Anterior
