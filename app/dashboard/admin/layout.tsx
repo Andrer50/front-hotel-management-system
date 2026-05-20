@@ -3,6 +3,7 @@
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardNavbar } from "@/presentation/dashboard/navbar";
+import { PermissionGuard } from "@/components/shared/permission-guard";
 
 export default function AdminDashboardLayout({
   children,
@@ -24,7 +25,9 @@ export default function AdminDashboardLayout({
 
           {/* Área de Visualización de la Página */}
           <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-            {children}
+            <PermissionGuard>
+              {children}
+            </PermissionGuard>
           </main>
 
         </SidebarInset>

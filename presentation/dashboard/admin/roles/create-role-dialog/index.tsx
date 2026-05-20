@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, ShieldCheck, Loader2 } from "lucide-react";
+import { X, ShieldCheck, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,6 +13,7 @@ import {
 import { useSession } from "next-auth/react";
 import { useCreateRoleMutation } from "@/modules/role/domain/hooks/useCreateRoleMutation";
 import { toast } from "sonner";
+import { permissionTranslations } from "@/modules/role/features/constants";
 
 interface CreateRoleDialogProps {
   isOpen: boolean;
@@ -118,6 +119,13 @@ export function CreateRoleDialog({
         return Array.from(newSet);
       });
     }
+  };
+
+  // Diccionario de traducción para codenames (mismo que en la página principal)
+  
+
+  const getPermissionInfo = (codename: string) => {
+    return permissionTranslations[codename] || { title: codename, desc: "Sin descripción disponible." };
   };
 
   return (
@@ -245,6 +253,7 @@ export function CreateRoleDialog({
                           const isSelected = selectedPermissions.includes(
                             perm.id,
                           );
+                          const info = getPermissionInfo(perm.codename);
                           return (
                             <div
                               key={perm.id}
@@ -270,10 +279,10 @@ export function CreateRoleDialog({
                                 <span
                                   className={`text-[13px] font-bold ${isSelected ? "text-brand-blue" : "text-dark-primary"}`}
                                 >
-                                  {perm.name}
+                                  {info.title}
                                 </span>
                                 <span className="text-[10px] font-medium text-dark-secondary leading-tight">
-                                  Codename: {perm.codename}
+                                  {info.desc}
                                 </span>
                               </div>
                             </div>

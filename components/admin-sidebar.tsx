@@ -3,24 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useSessionContext } from "@/context/session-context";
 import { cn } from "@/lib/utils";
-import {
-  Shield,
-  Layers,
-  ConciergeBell,
-  Briefcase,
-  BarChart3,
-  Sparkles,
-  HelpCircle,
-  LogOut,
-  Hotel,
-  CalendarDays,
-  Users,
-  BedDouble,
-  Building2,
-  Package,
-  AlertTriangle,
-} from "lucide-react";
+import { Hotel, HelpCircle, LogOut } from "lucide-react";
+import { navigationItems } from "@/core/shared/navigation";
 import {
   Sidebar,
   SidebarHeader,
@@ -31,59 +17,23 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 
-const navigationItems = [
-  {
-    name: "Administración",
-    href: "/dashboard/admin/administration",
-    icon: Shield,
-  },
-  { name: "Personal", href: "/dashboard/admin/users", icon: Layers },
-  {
-    name: "Clientes",
-    href: "/dashboard/admin/clients",
-    icon: Users,
-  },
-  {
-    name: "Reservas",
-    href: "/dashboard/admin/reservations",
-    icon: CalendarDays,
-  },
-  {
-    name: "Habitaciones",
-    href: "/dashboard/admin/rooms",
-    icon: BedDouble,
-  },
-  {
-    name: "Incidencias",
-    href: "/dashboard/admin/incidencias",
-    icon: AlertTriangle,
-  },
-  {
-    name: "Áreas Comunes",
-    href: "/dashboard/admin/common-areas",
-    icon: Building2,
-  },
-  {
-    name: "Inventario",
-    href: "/dashboard/admin/inventory",
-    icon: Package,
-  },
-  {
-    name: "Roles",
-    href: "/dashboard/admin/roles",
-    icon: Shield,
-  },
-  { name: "Comercial", href: "/dashboard/admin/commercial", icon: Briefcase },
-  {
-    name: "Estadísticas",
-    href: "/dashboard/admin/statistics",
-    icon: BarChart3,
-  },
-  { name: "IA", href: "/dashboard/admin/ai", icon: Sparkles },
-];
-
 export function AdminSidebar() {
   const pathname = usePathname();
+  const { session } = useSessionContext();
+
+  const userPermissions = session?.user?.permissions || [];
+  const userRole = session?.user?.role;
+
+  const filteredItems = navigationItems.filter((item) => {
+    // Si no tiene permiso requerido, se muestra a todos
+    if (!item.permission) return true;
+
+    // Si es Administrador, tiene acceso a todo
+    if (userRole?.toLowerCase() === "administrador" || userRole?.toLowerCase() === "admin") return true;
+
+    // Verificar si el usuario tiene el permiso específico
+    return userPermissions.includes(item.permission);
+  });
 
   return (
     <Sidebar className="border-r border-zinc-100 bg-white">
@@ -107,9 +57,11 @@ export function AdminSidebar() {
       {/* Contenido / Enlaces de navegación */}
       <SidebarContent className="px-4 py-4 flex flex-col gap-1.5">
         <SidebarMenu className="flex flex-col gap-1.5">
-          {navigationItems.map((item) => {
+          {filteredItems.map((item) => {
             const isActive =
-              pathname === item.href || pathname.startsWith(item.href + "/");
+              item.href === "/dashboard/admin"
+                ? pathname === "/dashboard/admin"
+                : pathname.startsWith(item.href);
             const Icon = item.icon;
 
             return (
@@ -152,18 +104,6 @@ export function AdminSidebar() {
       {/* Pie / Opciones adicionales y desconexión */}
       <SidebarFooter className="p-4 border-t border-zinc-100 flex flex-col gap-1">
         <SidebarMenu className="flex flex-col gap-1">
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="group flex items-center gap-3 px-4 py-5 rounded-xl text-[13px] font-semibold text-dark-secondary hover:text-dark-primary hover:bg-zinc-50 transition-all duration-200 h-10 cursor-pointer"
-            >
-              <Link href="/dashboard/admin/help">
-                <HelpCircle className="h-4.5 w-4.5 text-dark-secondary/70 group-hover:text-dark-primary" />
-                <span>Ayuda</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
