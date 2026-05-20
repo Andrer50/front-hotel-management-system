@@ -21,7 +21,6 @@ export default function AdminHomePage() {
 
   const filteredItems = navigationItems.filter((item) => {
     if (!item.permission) return true;
-    if (userRole.toLowerCase() === "administrador" || userRole.toLowerCase() === "admin") return true;
     return userPermissions.includes(item.permission);
   });
 
