@@ -32,12 +32,12 @@ import {
 import { useCreateGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 
 interface CreateGuestDialogProps {
-  isOpen: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function CreateGuestDialog({
-  isOpen,
+  open,
   onOpenChange,
 }: CreateGuestDialogProps) {
   const createGuestMutation = useCreateGuestMutation();
@@ -110,7 +110,7 @@ export function CreateGuestDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-white rounded-3xl border border-zinc-100 shadow-2xl p-0 overflow-hidden isolate">
         {/* Cabecera Premium */}
         <div className="bg-gradient-to-r from-emerald-600 to-teal-500 p-6 text-white relative overflow-hidden">

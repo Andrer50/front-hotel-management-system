@@ -1,3 +1,5 @@
+import { ClientStatus } from "../../shared";
+
 export interface Guest {
   id: number;
   nombre: string;
@@ -6,6 +8,7 @@ export interface Guest {
   documento: string;
   email: string;
   telefono: string;
+  status: ClientStatus;
   preferencias_notas?: string;
   // Campos calculados o adicionales que el front pueda necesitar
   fullName?: string;
@@ -18,9 +21,26 @@ export interface CreateGuestRequest {
   documento: string;
   email: string;
   telefono?: string;
+  status?: ClientStatus;
   preferencias_notas?: string;
 }
 
 export interface UpdateGuestRequest extends Partial<CreateGuestRequest> {
   id: number;
+}
+
+// Interfaz para Huéspedes (UI mapping)
+export interface GuestUI {
+  id: string;
+  name: string;
+  email: string;
+  document: string;
+  documentType: string;
+  phone: string;
+  lastCheckIn: string;
+  totalStays: number;
+  status: ClientStatus;
+  avatarBg: string;
+  initials: string;
+  domainData: Guest;
 }
