@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { CreateUserDialog } from "@/presentation/dashboard/admin/users/create-user-dialog";
 import { UpdateUserDialog } from "@/presentation/dashboard/admin/users/update-user-dialog";
+import { RolesManagement } from "./roles-management";
 import { useGetUsersQuery } from "@/modules/user/domain/hooks/useUserQueries";
 import { User } from "@/core/user/interfaces";
 
