@@ -5,11 +5,11 @@ export const getUsersAction = async (): Promise<User[]> => {
   return apiClient.get<User[]>("hotel/users");
 };
 
-export const createUserAction = async (request: CreateUserRequest): Promise<void> => {
-  return apiClient.post<void>("hotel/register", request);
+export const createUserAction = async (request: CreateUserRequest): Promise<User> => {
+  return apiClient.post<User>("hotel/register", request);
 };
 
-export const updateUserAction = async (request: UpdateUserRequest): Promise<void> => {
+export const updateUserAction = async (request: UpdateUserRequest): Promise<User> => {
   const { id, ...data } = request;
-  return apiClient.patch<void>(`hotel/users/${id}`, data);
+  return apiClient.patch<User>(`hotel/users/${id}`, data);
 };

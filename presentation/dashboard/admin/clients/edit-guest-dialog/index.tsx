@@ -22,7 +22,7 @@ import {
 import { toast } from "sonner";
 import { User, Mail, Loader2, Sparkles, Hash, Phone, FileText } from "lucide-react";
 import { Guest } from "@/core/guest/interfaces";
-import { ClientStatus } from "@/core/shared";
+import { Status } from "@/core/shared";
 import { useUpdateGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 
 interface EditGuestDialogProps {
@@ -44,7 +44,7 @@ export function EditGuestDialog({
   const [tipoDocumento, setTipoDocumento] = useState("");
   const [documento, setDocumento] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [status, setStatus] = useState<ClientStatus>("ACTIVE");
+  const [status, setStatus] = useState<Status>("ACTIVE");
 
   useEffect(() => {
     if (guest) {
@@ -216,7 +216,7 @@ export function EditGuestDialog({
               <Label className="text-[11px] font-black uppercase text-dark-secondary tracking-widest ml-1">
                 Estado del Perfil
               </Label>
-              <Select value={status} onValueChange={(val: ClientStatus) => setStatus(val)}>
+              <Select value={status} onValueChange={(val: Status) => setStatus(val)}>
                 <SelectTrigger className={`h-12 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white focus:ring-4 focus:ring-brand-blue/5 transition-all font-bold text-xs ${status === 'ACTIVE' ? 'text-brand-blue' : 'text-zinc-500'}`}>
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>

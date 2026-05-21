@@ -31,6 +31,7 @@ import {
 import { useUpdateUserMutation } from "@/modules/user/domain/hooks/useUpdateUserMutation";
 import { useGetRolesQuery } from "@/modules/role/domain/hooks/useRoleQueries";
 import { User } from "@/core/user/interfaces";
+import { Status } from "@/core/shared";
 
 interface UpdateUserDialogProps {
   isOpen: boolean;
@@ -48,13 +49,18 @@ export function UpdateUserDialog({
   const [email, setEmail] = useState("");
   const [roleId, setRoleId] = useState<string>("");
   const [phone, setPhone] = useState("");
+  const [status, setStatus] = useState<Status>("ACTIVE");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Guardamos el ID del usuario anterior para detectar cambios de prop durante el renderizado
   const [prevUserId, setPrevUserId] = useState<number | null>(null);
 
   const { data: roles = [] } = useGetRolesQuery();
-  const updateUserMutation = useUpdateUserMutation();
+  const updateUserMutation = useUpdateUserMutation({
+    onSuccess: () => {
+      onOpenChange(false);
+    }
+  });
 
   // Ajustar el estado síncronamente cuando el usuario cambia o el diálogo se abre
   // Esta es la forma recomendada por React para ajustar estado basado en props sin causar renders en cascada
@@ -65,6 +71,7 @@ export function UpdateUserDialog({
     setEmail(user.email || "");
     setRoleId(user.role?.toString() || "");
     setPhone(user.phone || "");
+    setStatus(user.status || "ACTIVE");
     setErrors({});
   }
 
@@ -103,20 +110,20 @@ export function UpdateUserDialog({
         lastName,
         role: parseInt(roleId),
         phone,
+        status,
       },
       {
         onSuccess: () => {
           toast.success("Personal Actualizado", {
             description: `Se han guardado los cambios para ${firstName} ${lastName}.`,
           });
-          onOpenChange(false);
         },
         onError: (e) => {
           toast.error("Error al actualizar personal", {
             description: e.message || "No se pudo conectar con el servidor.",
           });
         },
-      },
+      }
     );
   };
 
@@ -293,6 +300,41 @@ export function UpdateUserDialog({
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Estado del Colaborador */}
+          <div className="flex flex-col gap-1.5">
+            <Label
+              htmlFor="edit-status"
+              className="text-xs font-bold text-dark-primary flex items-center gap-1.5"
+            >
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${status === "ACTIVE" ? "bg-green-500" : "bg-zinc-400"}`}
+              />
+              Estado Administrativo
+            </Label>
+            <Select
+              value={status}
+              onValueChange={(val: Status) => setStatus(val)}
+            >
+              <SelectTrigger className="h-10 text-xs rounded-xl border-zinc-200 bg-zinc-50/50">
+                <SelectValue placeholder="Seleccione el estado..." />
+              </SelectTrigger>
+              <SelectContent className="bg-white rounded-xl border border-zinc-100 shadow-xl">
+                <SelectItem value="ACTIVE" className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    Personal Activo
+                  </div>
+                </SelectItem>
+                <SelectItem value="INACTIVE" className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                    Personal Inactivo
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Footer del Dialog */}

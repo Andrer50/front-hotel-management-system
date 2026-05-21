@@ -1,14 +1,24 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateUserAction } from "@/core/user/actions/userActions";
-import { UpdateUserRequest } from "@/core/user/interfaces";
+import { UpdateUserRequest, User } from "@/core/user/interfaces";
 
-export const useUpdateUserMutation = () => {
+interface UseUpdateUserMutationOptions {
+  onSuccess?: () => void;
+}
+
+export const useUpdateUserMutation = (options?: UseUpdateUserMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: UpdateUserRequest) => updateUserAction(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+    onSuccess: async () => {
+      // 1. Invalidamos las queries para refrescar la tabla
+      await queryClient.invalidateQueries({ queryKey: ["users"] });
+      
+      // 2. Ejecutamos el callback del componente (ej. cerrar el modal)
+      if (options?.onSuccess) {
+        options.onSuccess();
+      }
     },
   });
 };

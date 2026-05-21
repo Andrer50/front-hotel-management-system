@@ -1,4 +1,4 @@
-import { ClientStatus } from "../../shared";
+import { Status } from "../../shared";
 
 export interface Guest {
   id: number;
@@ -8,7 +8,7 @@ export interface Guest {
   documento: string;
   email: string;
   telefono: string;
-  status: ClientStatus;
+  status: Status;
   preferencias_notas?: string;
   // Campos calculados o adicionales que el front pueda necesitar
   fullName?: string;
@@ -21,7 +21,7 @@ export interface CreateGuestRequest {
   documento: string;
   email: string;
   telefono?: string;
-  status?: ClientStatus;
+  status?: Status;
   preferencias_notas?: string;
 }
 
@@ -39,7 +39,7 @@ export interface GuestUI {
   phone: string;
   lastCheckIn: string;
   totalStays: number;
-  status: ClientStatus;
+  status: Status;
   avatarBg: string;
   initials: string;
   domainData: Guest;

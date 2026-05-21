@@ -33,7 +33,7 @@ import { useGetGuestsQuery } from "@/modules/guest/domain/hooks/useGuestQueries"
 import { useDeleteGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 import { Loader2 } from "lucide-react";
 import { Guest, GuestUI } from "@/core/guest/interfaces";
-import { ClientStatus } from "@/core/shared";
+import { Status } from "@/core/shared";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -42,7 +42,7 @@ export default function ReceptionGuestsPage() {
   const deleteGuestMutation = useDeleteGuestMutation();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ClientStatus | "ALL">("ALL");
+  const [statusFilter, setStatusFilter] = useState<Status | "ALL">("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
