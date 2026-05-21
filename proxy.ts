@@ -12,6 +12,8 @@ const ROUTE_PERMISSIONS: Record<string, string> = {
   "/dashboard/admin/statistics": "can_view_reports",
   "/dashboard/admin/rooms": "can_manage_rooms",
   "/dashboard/admin/common-areas": "can_manage_rooms",
+  "/dashboard/admin/incidencias": "can_do_maintenance",
+  "/dashboard/admin/limpieza": "can_clean_rooms",
 };
 
 export async function proxy(request: NextRequest) {
@@ -25,12 +27,6 @@ export async function proxy(request: NextRequest) {
   if (!token) {
     const loginUrl = new URL("/", request.url);
     return NextResponse.redirect(loginUrl);
-  }
-
-  // Si es Administrador, saltar validaciones de permisos
-  const userRole = (token.role as string) || "";
-  if (userRole.toLowerCase() === "administrador" || userRole.toLowerCase() === "admin") {
-    return NextResponse.next();
   }
 
   // Verificar si la ruta actual o algun padre requiere permiso
