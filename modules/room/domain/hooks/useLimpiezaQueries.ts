@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { getLimpiezasAction, getPersonalLimpiezaAction } from "@/core/room/actions/limpiezaActions";
+import { getLimpiezasAction } from "@/core/room/actions/limpiezaActions";
+import { useGetUsersQuery } from "@/modules/user/domain/hooks/useUserQueries";
+import { useMemo } from "react";
 
 export const useGetLimpiezasQuery = () => {
     return useQuery({
@@ -10,8 +12,18 @@ export const useGetLimpiezasQuery = () => {
 };
 
 export const useGetPersonalLimpiezaQuery = () => {
-    return useQuery({
-        queryKey: ["personal-limpieza"],
-        queryFn: getPersonalLimpiezaAction,
-    });
+    const { data: users = [], ...rest } = useGetUsersQuery();
+
+    const filtered = useMemo(() => {
+        return users.filter((user) =>
+            user.role_details?.permissions.some(
+                (p) => p.codename === "can_clean_rooms",
+            ),
+        );
+    }, [users]);
+
+    return {
+        ...rest,
+        data: filtered,
+    };
 };
