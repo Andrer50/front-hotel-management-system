@@ -1,4 +1,5 @@
 import { Role } from "@/core/role/interfaces";
+import { Status } from "@/core/shared";
 
 export interface User {
   id: number;
@@ -10,6 +11,7 @@ export interface User {
   role_details: Role | null;
   sede_asignada: number | null;
   phone: string;
+  status: Status;
 }
 
 export interface CreateUserRequest {
@@ -20,6 +22,7 @@ export interface CreateUserRequest {
   role: number;
   phone: string;
   sede_asignada?: number;
+  status?: Status;
 }
 
 export interface UpdateUserRequest {
@@ -30,4 +33,5 @@ export interface UpdateUserRequest {
   role?: number;
   phone?: string;
   sede_asignada?: number;
+  status?: Status;
 }

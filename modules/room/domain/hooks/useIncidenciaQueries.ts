@@ -1,5 +1,7 @@
+import { useGetUsersQuery } from "@/modules/user/domain/hooks/useUserQueries";
 import { useQuery } from "@tanstack/react-query";
-import { getIncidenciasAction, getPersonalMantenimientoAction } from "@/core/room/actions/incidenciaActions";
+import { getIncidenciasAction } from "@/core/room/actions/incidenciaActions";
+import { useMemo } from "react";
 
 export const useGetIncidenciasQuery = () =>
     useQuery({
@@ -8,11 +10,20 @@ export const useGetIncidenciasQuery = () =>
         refetchInterval: 60000,
     });
 
-export const useGetPersonalMantenimientoQuery = () =>
-    useQuery({
-        queryKey: ["personal-mantenimiento"],
-        queryFn: getPersonalMantenimientoAction,
-    });
+export const useGetPersonalMantenimientoQuery = () => {
+    const { data: users = [], ...rest } = useGetUsersQuery();
+
+    const filtered = useMemo(() => {
+        return users.filter(user =>
+            user.role_details?.name === 'Mantenimiento'
+        );
+    }, [users]);
+
+    return {
+        ...rest,
+        data: filtered,
+    };
+};
 
 export const useGetTodasIncidenciasQuery = () =>
     useQuery({

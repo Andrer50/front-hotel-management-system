@@ -11,6 +11,7 @@ import {
   BarChart3,
   Sparkles,
   Shield,
+  Brush,
 } from "lucide-react";
 
 export interface NavItem {
@@ -49,6 +50,12 @@ export const navigationItems: NavItem[] = [
     href: "/dashboard/admin/rooms",
     icon: BedDouble,
     permission: "can_manage_rooms",
+  },
+  {
+    name: "Estados de Limpieza",
+    href: "/dashboard/admin/limpieza",
+    icon: Brush,
+    permission: "can_clean_rooms",
   },
   {
     name: "Incidencias",

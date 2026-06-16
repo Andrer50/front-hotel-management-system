@@ -36,8 +36,10 @@ import { AssignLimpiezaDialog } from "@/presentation/dashboard/admin/rooms/assig
 import { LimpiezaCardSection } from "@/presentation/dashboard/admin/rooms/limpieza-card-section";
 import { AssignMantenimientoDialog } from "@/presentation/dashboard/admin/rooms/assign-mantenimiento-dialog";
 import { EditIncidenciaDialog } from "@/presentation/dashboard/admin/rooms/edit-incidencia-dialog";
+import { useRouter } from "next/navigation";
 
 export default function RoomsManagementPage() {
+  const router = useRouter();
   const { data: roomsData = [], isLoading: isLoadingRooms } = useGetRoomsQuery();
   const { data: plantas = [], isLoading: isLoadingPlantas } = useGetPlantasQuery();
   const { data: limpiezas = [] } = useGetLimpiezasQuery();
@@ -503,10 +505,10 @@ export default function RoomsManagementPage() {
           </div>
 
           <button
-            onClick={() => toast("Redirigiendo a panel de ingeniería...")}
+            onClick={() => router.push("/dashboard/admin/incidencias")}
             className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-extrabold text-xs py-3 rounded-xl transition-all mt-auto cursor-pointer"
           >
-            Abrir Portal de Mantenimiento
+            Ir al Panel de Incidencias
           </button>
         </div>
       </div>

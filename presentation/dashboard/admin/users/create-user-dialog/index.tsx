@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useCreateUserMutation } from "@/modules/user/domain/hooks/useCreateUserMutation";
 import { useGetRolesQuery } from "@/modules/role/domain/hooks/useRoleQueries";
+import { Status } from "@/core/shared";
 
 interface CreateUserDialogProps {
   isOpen: boolean;
@@ -47,10 +48,23 @@ export function CreateUserDialog({
   const [password, setPassword] = useState("");
   const [roleId, setRoleId] = useState<string>("");
   const [phone, setPhone] = useState("");
+  const [status, setStatus] = useState<Status>("ACTIVE");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const { data: roles = [] } = useGetRolesQuery();
-  const createUserMutation = useCreateUserMutation();
+  const createUserMutation = useCreateUserMutation({
+    onSuccess: () => {
+      // Resetear formulario
+      setFirstName("");
+      setLastName("");
+      setEmail("");
+      setPassword("");
+      setRoleId("");
+      setPhone("");
+      setErrors({});
+      onOpenChange(false);
+    }
+  });
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -86,29 +100,20 @@ export function CreateUserDialog({
         lastName,
         role: parseInt(roleId),
         phone,
+        status,
       },
       {
         onSuccess: () => {
           toast.success("Personal Registrado Exitosamente", {
             description: `Se ha registrado a ${firstName} ${lastName} correctamente.`,
           });
-
-          // Resetear formulario
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setPassword("");
-          setRoleId("");
-          setPhone("");
-          setErrors({});
-          onOpenChange(false);
         },
-        onError: (e) => {
+        onError: (e: any) => {
           toast.error("Error al registrar personal", {
             description: e.message || "No se pudo conectar con el servidor.",
           });
         },
-      },
+      }
     );
   };
 
@@ -318,6 +323,41 @@ export function CreateUserDialog({
                 </span>
               )}
             </div>
+          </div>
+
+          {/* Estado del Colaborador */}
+          <div className="flex flex-col gap-1.5">
+            <Label
+              htmlFor="status"
+              className="text-xs font-bold text-dark-primary flex items-center gap-1.5"
+            >
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${status === "ACTIVE" ? "bg-green-500" : "bg-zinc-400"}`}
+              />
+              Estado Inicial
+            </Label>
+            <Select
+              value={status}
+              onValueChange={(val: Status) => setStatus(val)}
+            >
+              <SelectTrigger className="h-10 text-xs rounded-xl border-zinc-200 bg-zinc-50/50">
+                <SelectValue placeholder="Seleccione el estado..." />
+              </SelectTrigger>
+              <SelectContent className="bg-white rounded-xl border border-zinc-100 shadow-xl">
+                <SelectItem value="ACTIVE" className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    Personal Activo
+                  </div>
+                </SelectItem>
+                <SelectItem value="INACTIVE" className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                    Personal Inactivo
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Footer del Dialog */}

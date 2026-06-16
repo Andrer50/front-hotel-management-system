@@ -13,112 +13,57 @@ import {
   Clock,
   UserPlus2,
   ExternalLink,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { toast } from "sonner";
 import { CreateGuestDialog } from "@/presentation/dashboard/admin/clients/create-guest-dialog";
+import { EditGuestDialog } from "@/presentation/dashboard/admin/clients/edit-guest-dialog";
 import { useGetGuestsQuery } from "@/modules/guest/domain/hooks/useGuestQueries";
 import { useDeleteGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 import { Loader2 } from "lucide-react";
+import { Guest, GuestUI } from "@/core/guest/interfaces";
+import { Status } from "@/core/shared";
 
-// Interfaz para Huéspedes
-interface Guest {
-  id: string;
-  name: string;
-  email: string;
-  lastCheckIn: string;
-  totalStays: number;
-  status: "ACTIVE" | "INACTIVE";
-  avatarBg: string;
-  initials: string;
-}
-
-const initialGuests: Guest[] = [
-  {
-    id: "1",
-    name: "Alex Thompson",
-    email: "alex.thompson@examplem.com",
-    lastCheckIn: "12 Oct, 2023",
-    totalStays: 18,
-    status: "ACTIVE",
-    avatarBg: "bg-blue-100 text-blue-600",
-    initials: "AT",
-  },
-  {
-    id: "2",
-    name: "Elena Rodríguez",
-    email: "elena.r@corporate.com",
-    lastCheckIn: "24 Sep, 2023",
-    totalStays: 5,
-    status: "ACTIVE",
-    avatarBg: "bg-emerald-100 text-emerald-600",
-    initials: "ER",
-  },
-  {
-    id: "3",
-    name: "Marcus Weber",
-    email: "m.weber@tech-labs.de",
-    lastCheckIn: "05 Ago, 2023",
-    totalStays: 2,
-    status: "INACTIVE",
-    avatarBg: "bg-zinc-100 text-zinc-600",
-    initials: "MW",
-  },
-  {
-    id: "4",
-    name: "Sarah Jansens",
-    email: "s.jansens@lifestyle.net",
-    lastCheckIn: "24 Oct, 2023",
-    totalStays: 21,
-    status: "ACTIVE",
-    avatarBg: "bg-pink-100 text-pink-600",
-    initials: "SJ",
-  },
-  {
-    id: "5",
-    name: "Oliver Lang",
-    email: "oliver.l@ventures.ch",
-    lastCheckIn: "15 May, 2023",
-    totalStays: 1,
-    status: "INACTIVE",
-    avatarBg: "bg-amber-100 text-amber-600",
-    initials: "OL",
-  },
-  {
-    id: "6",
-    name: "Sophia Martinez",
-    email: "s.martinez@luxurytravel.com",
-    lastCheckIn: "01 Nov, 2023",
-    totalStays: 12,
-    status: "ACTIVE",
-    avatarBg: "bg-indigo-100 text-indigo-600",
-    initials: "SM",
-  },
-];
+const ITEMS_PER_PAGE = 8;
 
 export default function ReceptionGuestsPage() {
   const { data: guestsData = [], isLoading } = useGetGuestsQuery();
   const deleteGuestMutation = useDeleteGuestMutation();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "ALL" | "ACTIVE" | "INACTIVE"
-  >("ALL");
+  const [statusFilter, setStatusFilter] = useState<Status | "ALL">("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
 
   // Mapeo y Filtro de huéspedes interactivo
   const filteredGuests = useMemo(() => {
     // Mapeamos los datos del backend a la interfaz del frontend
-    const mappedGuests: Guest[] = guestsData.map((g) => ({
+    const mappedGuests: GuestUI[] = guestsData.map((g) => ({
       id: g.id.toString(),
       name: `${g.nombre} ${g.apellido}`,
       email: g.email,
+      document: g.documento,
+      documentType: g.tipo_documento,
+      phone: g.telefono || "N/A",
       lastCheckIn: "N/A", // El backend aún no provee esto en el modelo Huesped
       totalStays: 0, // El backend aún no provee esto
-      status: "ACTIVE", // Por defecto activo
+      status: g.status || "ACTIVE",
       avatarBg: "bg-blue-100 text-blue-600",
       initials: `${g.nombre[0]}${g.apellido[0]}`.toUpperCase(),
+      domainData: g,
     }));
 
     return mappedGuests.filter((guest) => {
@@ -126,11 +71,20 @@ export default function ReceptionGuestsPage() {
         statusFilter === "ALL" || guest.status === statusFilter;
       const matchesSearch =
         guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        guest.email.toLowerCase().includes(searchQuery.toLowerCase());
+        guest.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        guest.document.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        guest.phone.toLowerCase().includes(searchQuery.toLowerCase());
 
       return matchesStatus && matchesSearch;
     });
   }, [guestsData, statusFilter, searchQuery]);
+
+  // Paginación
+  const totalPages = Math.ceil(filteredGuests.length / ITEMS_PER_PAGE);
+  const paginatedGuests = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredGuests.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredGuests, currentPage]);
 
   // KPIs dinámicos basados en filtros
   const kpis = useMemo(() => {
@@ -164,6 +118,11 @@ export default function ReceptionGuestsPage() {
   const handleAddGuest = () => {
     // La mutación se encarga de invalidar y refrescar
     setIsCreateOpen(false);
+  };
+
+  const handleEditGuest = (guest: Guest) => {
+    setSelectedGuest(guest);
+    setIsEditOpen(true);
   };
 
   const handleExportData = () => {
@@ -230,7 +189,7 @@ export default function ReceptionGuestsPage() {
             Total Huéspedes
           </span>
           <span className="text-3xl font-extrabold text-brand-blue tracking-tight mt-1">
-            {kpis.total === initialGuests.length ? "12.482" : kpis.total}
+            {kpis.total}
           </span>
         </div>
 
@@ -240,7 +199,7 @@ export default function ReceptionGuestsPage() {
             Check-ins Activos
           </span>
           <span className="text-3xl font-extrabold text-brand-blue tracking-tight mt-1">
-            {kpis.total === initialGuests.length ? "412" : kpis.activeCheckIns}
+            {kpis.activeCheckIns}
           </span>
         </div>
 
@@ -250,9 +209,7 @@ export default function ReceptionGuestsPage() {
             Tasa de Lealtad
           </span>
           <span className="text-3xl font-extrabold text-brand-blue tracking-tight mt-1">
-            {kpis.total === initialGuests.length
-              ? "68.2%"
-              : `${kpis.loyaltyRate}%`}
+            {`${kpis.loyaltyRate}%`}
           </span>
         </div>
 
@@ -263,7 +220,7 @@ export default function ReceptionGuestsPage() {
           </span>
           <div className="flex items-baseline gap-1 mt-1">
             <span className="text-3xl font-extrabold text-brand-blue tracking-tight">
-              {kpis.total === initialGuests.length ? "4.2" : kpis.avgStay}
+              {kpis.avgStay}
             </span>
             <span className="text-xs text-dark-secondary font-medium lowercase">
               noches
@@ -338,15 +295,15 @@ export default function ReceptionGuestsPage() {
               <tr className="border-b border-zinc-100 text-[10px] font-bold text-dark-secondary/80 tracking-widest uppercase">
                 <th className="pb-4 font-bold text-left">Nombre</th>
                 <th className="pb-4 font-bold text-left">Email</th>
-                <th className="pb-4 font-bold text-left">Último Check-in</th>
-                <th className="pb-4 font-bold text-left">Total Estancias</th>
+                <th className="pb-4 font-bold text-left">Documento</th>
+                <th className="pb-4 font-bold text-left">Teléfono</th>
                 <th className="pb-4 font-bold text-left">Estado</th>
                 <th className="pb-4 font-bold text-right">Acción</th>
               </tr>
             </thead>
             <tbody>
-              {filteredGuests.length > 0 ? (
-                filteredGuests.map((guest) => (
+              {paginatedGuests.length > 0 ? (
+                paginatedGuests.map((guest) => (
                   <tr
                     key={guest.id}
                     className="border-b border-zinc-50 hover:bg-zinc-50/40 transition-colors last:border-0"
@@ -370,14 +327,17 @@ export default function ReceptionGuestsPage() {
                       {guest.email}
                     </td>
 
-                    {/* Celda: Último Check-in */}
+                    {/* Celda: Documento */}
                     <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary">
-                      {guest.lastCheckIn}
+                      <div className="flex flex-col">
+                        <span className="font-bold text-dark-primary">{guest.document}</span>
+                        <span className="text-[10px] opacity-70">{guest.documentType}</span>
+                      </div>
                     </td>
 
-                    {/* Celda: Total Estancias */}
-                    <td className="py-4.5 pr-4 text-xs font-bold text-dark-primary pl-6">
-                      {guest.totalStays}
+                    {/* Celda: Teléfono */}
+                    <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary italic">
+                      {guest.phone}
                     </td>
 
                     {/* Celda: Estado */}
@@ -399,17 +359,12 @@ export default function ReceptionGuestsPage() {
                     <td className="py-4.5 text-right text-xs">
                       <div className="flex flex-col items-end gap-1.5 pl-4">
                         <button
-                          onClick={() => handleViewDetails(guest.name)}
+                          onClick={() => handleEditGuest(guest.domainData)}
                           className="text-brand-blue hover:text-blue-700 font-bold hover:underline transition-colors cursor-pointer"
                         >
-                          Ver
+                          <Pencil />
                         </button>
-                        <button
-                          onClick={() => handleViewDetails(guest.name)}
-                          className="text-dark-secondary hover:text-dark-primary font-bold hover:underline transition-colors cursor-pointer text-[10px]"
-                        >
-                          Perfil
-                        </button>
+                        
                       </div>
                     </td>
                   </tr>
@@ -431,70 +386,42 @@ export default function ReceptionGuestsPage() {
         {/* Paginación de Tabla */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-zinc-100/60 text-xs text-dark-secondary select-none">
           <span>
-            Mostrando 1-{filteredGuests.length} de{" "}
-            {filteredGuests.length === initialGuests.length
-              ? "1.240"
-              : filteredGuests.length}{" "}
-            resultados
+            Mostrando {paginatedGuests.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-
+            {(currentPage - 1) * ITEMS_PER_PAGE + paginatedGuests.length} de{" "}
+            {filteredGuests.length} resultados
           </span>
 
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled
-              className="h-8 px-3 rounded-lg border-zinc-200 text-zinc-400 cursor-not-allowed text-xs flex items-center gap-1 font-semibold"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-              Anterior
-            </Button>
+          <Pagination className="mx-0 w-auto">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  text="Anterior"
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(page)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer h-8 w-8 rounded-lg"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
 
-            <Button
-              size="sm"
-              className="h-8 w-8 rounded-lg bg-brand-blue hover:bg-blue-600 text-white font-bold text-xs"
-            >
-              1
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 rounded-lg hover:bg-zinc-100 text-dark-secondary hover:text-dark-primary font-bold text-xs"
-              onClick={() => toast("Cargando página 2 de huéspedes...")}
-            >
-              2
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 rounded-lg hover:bg-zinc-100 text-dark-secondary hover:text-dark-primary font-bold text-xs"
-              onClick={() => toast("Cargando página 3 de huéspedes...")}
-            >
-              3
-            </Button>
-
-            <span className="text-zinc-400 px-1 text-xs font-bold">...</span>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 rounded-lg hover:bg-zinc-100 text-dark-secondary hover:text-dark-primary font-bold text-xs"
-              onClick={() => toast("Cargando página final...")}
-            >
-              124
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 rounded-lg border-zinc-200 text-dark-secondary hover:text-dark-primary cursor-pointer text-xs flex items-center gap-1 font-semibold"
-              onClick={() => toast("Cargando página siguiente de huéspedes...")}
-            >
-              Siguiente
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  text="Siguiente"
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </div>
 
@@ -550,7 +477,16 @@ export default function ReceptionGuestsPage() {
         </div>
       </div>
 
-      <CreateGuestDialog isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      <CreateGuestDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
+
+      <EditGuestDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        guest={selectedGuest}
+      />
     </div>
   );
 }

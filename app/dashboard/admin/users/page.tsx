@@ -13,12 +13,14 @@ import {
   CheckCircle2,
   CalendarDays,
   UserCheck2,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { CreateUserDialog } from "@/presentation/dashboard/admin/users/create-user-dialog";
 import { UpdateUserDialog } from "@/presentation/dashboard/admin/users/update-user-dialog";
+import { RolesManagement } from "./roles-management";
 import { useGetUsersQuery } from "@/modules/user/domain/hooks/useUserQueries";
 import { User } from "@/core/user/interfaces";
 
@@ -42,7 +44,7 @@ export default function UsersManagementPage() {
       email: u.email,
       role: u.role_details?.name || "Sin Rol",
       department: (u.role_details?.name || "Recepción") as any,
-      status: "Activo" as const,
+      status: u.status === "ACTIVE" ? ("Activo" as const) : ("Inactivo" as const),
       avatarBg: "bg-blue-100 text-blue-600",
       initials:
         (u.firstName?.[0] || u.username?.[0] || "U").toUpperCase() +
@@ -76,14 +78,9 @@ export default function UsersManagementPage() {
   // Cálculos de KPIs dinámicos
   const stats = useMemo(() => {
     const total = filteredStaff.length;
-    const activos = filteredStaff.filter((m) => {
-      const stat = m.status as string;
-      return stat === "ACTIVE" || stat === "Activo";
-    }).length;
-    const vacaciones = filteredStaff.filter(
-      (m) => (m.status as string) === "En Vacaciones",
-    ).length;
-    return { total, activos, vacaciones };
+    const activos = filteredStaff.filter((m) => m.status === "Activo").length;
+    const inactivos = total - activos;
+    return { total, activos, inactivos };
   }, [filteredStaff]);
 
   const handleAddStaff = () => {
@@ -206,16 +203,16 @@ export default function UsersManagementPage() {
               </span>
             </div>
 
-            {/* Stat 3: En vacaciones */}
+            {/* Stat 3: Inactivos */}
             <div className="flex flex-col gap-1">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-extrabold text-zinc-500 tracking-tight">
-                  {stats.vacaciones}
+                <span className="text-3xl font-extrabold text-dark-secondary tracking-tight">
+                  {stats.inactivos}
                 </span>
-                <CalendarDays className="h-4 w-4 text-zinc-400/40 hidden sm:block" />
+                <CalendarDays className="h-4 w-4 text-dark-secondary/30 hidden sm:block" />
               </div>
               <span className="text-[10px] font-extrabold text-dark-secondary tracking-widest uppercase">
-                En Vacaciones
+                Inactivos
               </span>
             </div>
           </div>
@@ -351,7 +348,7 @@ export default function UsersManagementPage() {
                       ) : (
                         <span className="inline-flex items-center gap-1.5 bg-zinc-100 text-zinc-600 text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs">
                           <span className="h-1.5 w-1.5 rounded-full bg-zinc-400" />
-                          En Vacaciones
+                          Inactivo
                         </span>
                       )}
                     </td>
@@ -364,7 +361,7 @@ export default function UsersManagementPage() {
                         onClick={() => handleActionMenu(member.id)}
                         className="h-8 w-8 rounded-lg text-dark-secondary/60 hover:text-dark-primary hover:bg-zinc-100 cursor-pointer"
                       >
-                        <MoreVertical className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>
@@ -439,6 +436,8 @@ export default function UsersManagementPage() {
           </div>
         </div>
       </div>
+
+      <RolesManagement />
 
       <CreateUserDialog isOpen={isCreateOpen} onOpenChange={setIsCreateOpen} />
       <UpdateUserDialog

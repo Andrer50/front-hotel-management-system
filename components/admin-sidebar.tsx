@@ -28,9 +28,6 @@ export function AdminSidebar() {
     // Si no tiene permiso requerido, se muestra a todos
     if (!item.permission) return true;
 
-    // Si es Administrador, tiene acceso a todo
-    if (userRole?.toLowerCase() === "administrador" || userRole?.toLowerCase() === "admin") return true;
-
     // Verificar si el usuario tiene el permiso específico
     return userPermissions.includes(item.permission);
   });

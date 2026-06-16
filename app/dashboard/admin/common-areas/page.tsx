@@ -14,9 +14,17 @@ import {
   Calendar,
   User,
   ArrowUpRight,
+  PowerOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useGetCommonAreasQuery,
 } from "@/modules/common-area/domain/hooks/useCommonAreaQueries";
@@ -33,44 +41,41 @@ export default function CommonAreasPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Todos");
+  // Nuevo estado para el filtro de activación
+  const [activeFilter, setActiveFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState<CommonArea | null>(null);
 
   const categories = ["Todos", "Interiores", "Exteriores"];
 
+  // Filtro inteligente actualizado
   const filteredAreas = areas.filter((area) => {
     const matchesSearch = area.nombre.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === "Todos" || area.categoria === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesActive =
+      activeFilter === "ALL" ||
+      (activeFilter === "ACTIVE" && area.is_active) ||
+      (activeFilter === "INACTIVE" && !area.is_active);
+      
+    return matchesSearch && matchesCategory && matchesActive;
   });
 
   const getStatusConfig = (status: CommonAreaEstado) => {
     switch (status) {
       case "DISPONIBLE":
-        return {
-          color: "bg-emerald-50 text-emerald-600",
-          label: "OPERATIVO",
-          dot: "bg-emerald-500",
-        };
+        return { color: "bg-emerald-50 text-emerald-600", label: "OPERATIVO", dot: "bg-emerald-500" };
+      case "OCUPADA":
+        return { color: "bg-zinc-100 text-zinc-600", label: "OCUPADA", dot: "bg-zinc-500" };
+      case "SUCIA":
+        return { color: "bg-amber-50 text-amber-600", label: "SUCIA", dot: "bg-amber-500" };
       case "MANTENIMIENTO":
-        return {
-          color: "bg-blue-50 text-blue-600",
-          label: "EN PROCESO",
-          dot: "bg-blue-500",
-        };
+        return { color: "bg-red-50 text-red-600", label: "EN MTTO.", dot: "bg-red-500" };
       case "RESTRINGIDO":
-        return {
-          color: "bg-zinc-100 text-zinc-500",
-          label: "PROGRAMADO",
-          dot: "bg-zinc-400",
-        };
+        return { color: "bg-slate-100 text-slate-600", label: "RESTRINGIDO", dot: "bg-slate-500" };
       default:
-        return {
-          color: "bg-zinc-50 text-zinc-400",
-          label: "DESCONOCIDO",
-          dot: "bg-zinc-300",
-        };
+        return { color: "bg-zinc-50 text-zinc-400", label: "DESCONOCIDO", dot: "bg-zinc-300" };
     }
   };
 
@@ -83,7 +88,7 @@ export default function CommonAreasPage() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8 space-y-8 pb-24">
-      {/* Header Cards (As per Image) */}
+      {/* Header Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Status Card */}
         <div className="lg:col-span-2 bg-[#0051b3] rounded-[2rem] p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-900/20">
@@ -115,24 +120,52 @@ export default function CommonAreasPage() {
         </div>
       </div>
 
-      {/* Tabs Filter (As per Image) */}
-      <div className="flex gap-2 p-1 bg-zinc-100/50 rounded-2xl w-fit">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setCategoryFilter(cat)}
-            className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              categoryFilter === cat
-                ? "bg-white text-[#0051b3] shadow-sm"
-                : "text-zinc-400 hover:text-zinc-600"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* Barra de Filtros y Búsqueda */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        {/* Tabs de Categorías */}
+        <div className="flex gap-2 p-1 bg-zinc-100/50 rounded-2xl w-fit">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat)}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                categoryFilter === cat
+                  ? "bg-white text-[#0051b3] shadow-sm"
+                  : "text-zinc-400 hover:text-zinc-600"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Buscador y Filtro de Estado */}
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none sm:w-64">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <Input
+              placeholder="Buscar área..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 h-11 rounded-xl border-zinc-200 text-xs font-medium w-full"
+            />
+          </div>
+          
+          <Select value={activeFilter} onValueChange={(val: any) => setActiveFilter(val)}>
+            <SelectTrigger className="h-11 text-xs font-bold rounded-xl border-zinc-200 bg-white w-[140px]">
+              <span className="text-zinc-500 mr-1">Filtro:</span>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-zinc-100 shadow-xl">
+              <SelectItem value="ALL">Todas</SelectItem>
+              <SelectItem value="ACTIVE">Activas</SelectItem>
+              <SelectItem value="INACTIVE">Inactivas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Areas List (As per Image) */}
+      {/* Lista de Áreas Comunes */}
       <div className="space-y-3">
         {isLoading ? (
           [1, 2, 3].map((i) => <Skeleton key={i} className="h-24 w-full rounded-3xl" />)
@@ -146,7 +179,11 @@ export default function CommonAreasPage() {
                   setSelectedArea(area);
                   setIsUpdateOpen(true);
                 }}
-                className="bg-white hover:bg-zinc-50 transition-all p-4 rounded-[1.5rem] border border-zinc-100 flex items-center gap-6 group cursor-pointer shadow-sm hover:shadow-md"
+                className={`relative bg-white transition-all p-4 rounded-[1.5rem] border flex items-center gap-6 group cursor-pointer ${
+                  !area.is_active 
+                    ? "opacity-60 grayscale hover:opacity-80 border-zinc-200" 
+                    : "hover:bg-zinc-50 border-zinc-100 shadow-sm hover:shadow-md"
+                }`}
               >
                 {/* Square Image */}
                 <div className="h-16 w-16 rounded-2xl overflow-hidden flex-shrink-0 bg-zinc-100 border border-zinc-50">
@@ -165,7 +202,14 @@ export default function CommonAreasPage() {
 
                 {/* Content */}
                 <div className="flex-1 space-y-1">
-                  <h3 className="font-bold text-zinc-900 text-base uppercase tracking-tight">{area.nombre}</h3>
+                  <h3 className="font-bold text-zinc-900 text-base uppercase tracking-tight">
+                    {area.nombre}
+                    {!area.is_active && (
+                      <span className="ml-2 text-[10px] text-zinc-500 font-bold bg-zinc-100 px-2 py-0.5 rounded-md">
+                        Oculta
+                      </span>
+                    )}
+                  </h3>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 text-zinc-400" />
@@ -178,11 +222,18 @@ export default function CommonAreasPage() {
                   </div>
                 </div>
 
-                {/* Badge */}
-                <div className={`px-4 py-1.5 rounded-lg ${config.color} flex items-center gap-2`}>
-                  <div className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest">{config.label}</span>
-                </div>
+                {/* Badge de Estado o Inactividad */}
+                {!area.is_active ? (
+                  <div className="px-4 py-1.5 rounded-lg bg-zinc-800 text-white flex items-center gap-2">
+                    <PowerOff className="h-3 w-3" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Inactiva</span>
+                  </div>
+                ) : (
+                  <div className={`px-4 py-1.5 rounded-lg ${config.color} flex items-center gap-2`}>
+                    <div className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{config.label}</span>
+                  </div>
+                )}
 
                 <div className="p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <ArrowUpRight className="h-5 w-5 text-zinc-300" />

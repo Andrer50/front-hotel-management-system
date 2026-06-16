@@ -9,9 +9,11 @@ import {
   AlertTriangle,
   Star,
   Loader2,
+  Edit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateRoleDialog } from "@/presentation/dashboard/admin/roles/create-role-dialog";
+import { UpdateRoleDialog } from "@/presentation/dashboard/admin/roles/update-role-dialog";
 import { toast } from "sonner";
 import {
   useGetRolesQuery,
@@ -24,6 +26,7 @@ export default function RolesManagementPage() {
   const { session } = useSessionContext();
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [modifiedPerms, setModifiedPerms] = useState<{
     roleId: number;
     permIds: number[];
@@ -297,9 +300,19 @@ export default function RolesManagementPage() {
                   Modificado recientemente
                 </span>
               </div>
-              <h2 className="text-2xl font-extrabold text-dark-primary tracking-tight">
-                Permisos de {activeRole?.name || ""}
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-extrabold text-dark-primary tracking-tight">
+                  Permisos de {activeRole?.name || ""}
+                </h2>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsUpdateOpen(true)}
+                  className="h-8 w-8 text-brand-blue hover:text-blue-700 hover:bg-blue-50 rounded-full"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center gap-4 shrink-0">
@@ -394,6 +407,11 @@ export default function RolesManagementPage() {
         isOpen={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         availablePermissions={permissions}
+      />
+      <UpdateRoleDialog
+        isOpen={isUpdateOpen}
+        onOpenChange={setIsUpdateOpen}
+        role={activeRole || null}
       />
     </div>
   );

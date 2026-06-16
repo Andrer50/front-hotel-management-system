@@ -2,17 +2,35 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+export interface InputProps extends React.ComponentProps<"input"> {
+  startContent?: React.ReactNode;
+  endContent?: React.ReactNode;
+}
+
+function Input({ className, type, startContent, endContent, ...props }: InputProps) {
   return (
-    <input
-      type={type}
-      data-slot="input"
+    <div 
       className={cn(
-        "h-9 w-full min-w-0 rounded-3xl border border-transparent bg-input/50 px-3 py-1 text-base transition-[color,box-shadow,background-color] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        "flex h-9 w-full items-center rounded-3xl border border-transparent bg-input/50 px-4 transition-all focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/30",
         className
       )}
-      {...props}
-    />
+    >
+      {startContent && (
+        <div className="mr-3 text-muted-foreground transition-colors group-focus-within:text-brand-blue">
+          {startContent}
+        </div>
+      )}
+      <input
+        type={type}
+        className="flex-1 bg-transparent py-1 text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+        {...props}
+      />
+      {endContent && (
+        <div className="ml-3 text-muted-foreground transition-colors group-focus-within:text-brand-blue">
+          {endContent}
+        </div>
+      )}
+    </div>
   )
 }
 

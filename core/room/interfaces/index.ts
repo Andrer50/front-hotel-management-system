@@ -56,6 +56,8 @@ export interface Incidencia {
     descripcion: string;
     habitacion: number | null;
     habitacion_numero: string | null;
+    area_comun: number | null;
+    area_comun_nombre: string | null;
     prioridad: 'ALTA' | 'MEDIA' | 'BAJA';
     prioridad_display: string;
     estado: 'PENDIENTE' | 'EN_PROGRESO' | 'RESUELTO' | 'CANCELADO';

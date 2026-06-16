@@ -21,13 +21,6 @@ export function PermissionGuard({ children }: { children: React.ReactNode }) {
     }
 
     const userPermissions = session?.user?.permissions || [];
-    const userRole = session?.user?.role || "";
-
-    // Si es Administrador, tiene acceso total
-    if (userRole.toLowerCase() === "administrador" || userRole.toLowerCase() === "admin") {
-      setIsAuthorized(true);
-      return;
-    }
 
     // Buscar si la ruta actual requiere algún permiso
     const currentNavItem = navigationItems.find(
