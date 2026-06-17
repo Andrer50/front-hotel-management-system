@@ -19,3 +19,12 @@ export const createComprobanteAction = async (
 export const getComprobantesAction = async (): Promise<Comprobante[]> => {
   return apiClient.get<Comprobante[]>("hotel/comprobantes");
 };
+
+export const downloadComprobantePDFAction = async (
+  comprobanteId: number,
+): Promise<Blob> => {
+  return apiClient.get<Blob>(
+    `hotel/comprobantes/${comprobanteId}/pdf`,
+    { responseType: "blob" },
+  );
+};

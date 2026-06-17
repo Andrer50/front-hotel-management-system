@@ -25,10 +25,14 @@ import {
   CreditCard,
   Wallet,
   Landmark,
+  Download,
 } from "lucide-react";
 import { useGetConsumosExtraQuery } from "@/modules/consumo-extra/domain/hooks/useConsumoExtraQueries";
 import { useGetComprobanteQuery } from "@/modules/billing/domain/hooks/useBillingQueries";
-import { useCreateComprobanteMutation } from "@/modules/billing/domain/hooks/useBillingMutations";
+import {
+  useCreateComprobanteMutation,
+  useDownloadComprobantePDFMutation,
+} from "@/modules/billing/domain/hooks/useBillingMutations";
 import { Reservation } from "@/core/reservation/interfaces";
 import { BillingConcept, BillingType, PaymentMethod } from "@/core/shared";
 
@@ -65,6 +69,7 @@ export function BillingDialog({
 
   const createComprobanteMutation = useCreateComprobanteMutation(reservaId);
   const isEmitting = createComprobanteMutation.isPending;
+  const downloadComprobantePDFMutation = useDownloadComprobantePDFMutation();
 
   // Sync state if already exists in DB
   const displayBillingType = existingComprobante
@@ -92,8 +97,7 @@ export function BillingDialog({
     }
   };
 
-  const { data: consumos = [], isLoading: isLoadingConsumos } =
-    useGetConsumosExtraQuery(reservaId);
+  const { data: consumos = [] } = useGetConsumosExtraQuery(reservaId);
 
   // Calculations
   const roomPrice = reservation?.total || 0;
@@ -183,7 +187,34 @@ export function BillingDialog({
       minute: "2-digit",
       second: "2-digit",
     });
-  }, [existingComprobante, isOpen]);
+  }, [existingComprobante]);
+
+  const handleDownload = () => {
+    if (!existingComprobante) return;
+
+    toast.loading("Generando PDF...", { id: "download-pdf" });
+    downloadComprobantePDFMutation.mutate(existingComprobante.id, {
+      onSuccess: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${receiptNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success("Comprobante descargado con éxito", {
+          id: "download-pdf",
+        });
+      },
+      onError: (error) => {
+        toast.error("Error al descargar el comprobante", {
+          id: "download-pdf",
+        });
+        console.error(error);
+      },
+    });
+  };
 
   if (!reservation) return null;
 
@@ -474,6 +505,17 @@ export function BillingDialog({
             >
               Cancelar
             </Button>
+            {isReadOnly && (
+              <Button
+                variant="outline"
+                onClick={handleDownload}
+                disabled={downloadComprobantePDFMutation.isPending}
+                className="text-xs font-bold px-5 h-10 rounded-xl flex items-center gap-1.5 border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-50"
+              >
+                <Download className="h-4 w-4 text-zinc-500" />
+                Descargar
+              </Button>
+            )}
             <Button
               onClick={handleEmit}
               disabled={isEmitting || isLoadingComprobante}

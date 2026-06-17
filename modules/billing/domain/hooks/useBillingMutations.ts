@@ -1,5 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createComprobanteAction } from "@/core/billing/actions/billingActions";
+import {
+  createComprobanteAction,
+  downloadComprobantePDFAction,
+} from "@/core/billing/actions/billingActions";
 import { CreateComprobanteRequest } from "@/core/billing/interfaces";
 import { toast } from "sonner";
 
@@ -23,5 +26,11 @@ export const useCreateComprobanteMutation = (reservaId: number) => {
     onError: (error) => {
       toast.error(error.message || "Error al emitir el comprobante");
     },
+  });
+};
+
+export const useDownloadComprobantePDFMutation = () => {
+  return useMutation({
+    mutationFn: (comprobanteId: number) => downloadComprobantePDFAction(comprobanteId),
   });
 };
