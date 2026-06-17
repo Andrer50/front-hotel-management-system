@@ -313,38 +313,6 @@ export function CreateReservationDialog({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs font-bold flex items-center gap-1 mb-1">
-                    <Calendar className="h-3 w-3" /> Check-in
-                  </Label>
-                  <Input
-                    type="date"
-                    value={formData.fecha_entrada}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        fecha_entrada: e.target.value,
-                      })
-                    }
-                    className="h-10 text-xs rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs font-bold flex items-center gap-1 mb-1">
-                    <Calendar className="h-3 w-3" /> Check-out
-                  </Label>
-                  <Input
-                    type="date"
-                    value={formData.fecha_salida}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fecha_salida: e.target.value })
-                    }
-                    className="h-10 text-xs rounded-xl"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs font-bold flex items-center gap-1 mb-1">
                     <CreditCard className="h-3 w-3" /> Tarifa x noche
                   </Label>
                   <Input
