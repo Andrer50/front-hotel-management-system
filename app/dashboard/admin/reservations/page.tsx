@@ -26,6 +26,8 @@ import { UpdateReservationDialog } from "@/presentation/dashboard/admin/reservat
 import { AddConsumosDialog } from "@/presentation/dashboard/admin/reservations/add-consumos-dialog";
 import { BillingDialog } from "@/presentation/dashboard/admin/reservations/billing-dialog";
 import { Reservation } from "@/core/reservation/interfaces";
+import { CheckInDialog } from "@/presentation/dashboard/admin/reservations/checkin-dialog";
+import { CheckOutDialog } from "@/presentation/dashboard/admin/reservations/checkout-dialog";
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
@@ -121,6 +123,12 @@ export default function ReservationsPage() {
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
 
+  // Check-in / Check-out
+  const [isCheckInDialogOpen, setIsCheckInDialogOpen] = useState(false);
+  const [checkInReservation, setCheckInReservation] = useState<Reservation | null>(null);
+  const [isCheckOutDialogOpen, setIsCheckOutDialogOpen] = useState(false);
+  const [checkOutReservation, setCheckOutReservation] = useState<Reservation | null>(null);
+
   // Estados para el registro de consumos extra
   const [isConsumosDialogOpen, setIsConsumosDialogOpen] = useState(false);
   const [consumosReservation, setConsumosReservation] =
@@ -172,10 +180,6 @@ export default function ReservationsPage() {
     setIsBillingDialogOpen(true);
   };
 
-  const handleCheckIn = (guest: string, code: string) => {
-    toast.success(`Check-In de ${guest}`, { description: `Reserva ${code}` });
-  };
-
   const handleExportReport = () => {
     toast.info("Generando Reporte de Reservas", {
       description: "Exportando listado de reservas en formato PDF...",
@@ -193,6 +197,16 @@ export default function ReservationsPage() {
     toast.warning("Notificación Enviada", {
       description: "Alerta enviada al equipo de pisos",
     });
+  };
+
+  const handleCheckIn = (res: Reservation) => {
+    setCheckInReservation(res);
+    setIsCheckInDialogOpen(true);
+  };
+
+  const handleCheckOut = (res: Reservation) => {
+    setCheckOutReservation(res);
+    setIsCheckOutDialogOpen(true);
   };
 
   if (isLoadingReservations || isLoadingStats) {
@@ -222,11 +236,10 @@ export default function ReservationsPage() {
           <div className="flex bg-zinc-100 p-1 rounded-xl self-start md:self-center">
             <button
               onClick={() => setViewTab("LISTADO")}
-              className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all ${
-                viewTab === "LISTADO"
+              className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all ${viewTab === "LISTADO"
                   ? "bg-white text-brand-blue shadow-xs"
                   : "text-dark-secondary hover:text-dark-primary"
-              }`}
+                }`}
             >
               LISTADO
             </button>
@@ -237,11 +250,10 @@ export default function ReservationsPage() {
                   description: "Cargando diagrama...",
                 });
               }}
-              className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all ${
-                viewTab === "CALENDARIO"
+              className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all ${viewTab === "CALENDARIO"
                   ? "bg-white text-brand-blue shadow-xs"
                   : "text-dark-secondary hover:text-dark-primary"
-              }`}
+                }`}
             >
               CALENDARIO
             </button>
@@ -354,11 +366,10 @@ export default function ReservationsPage() {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all ${
-                  statusFilter === status
+                className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all ${statusFilter === status
                     ? "bg-white text-brand-blue shadow-xs"
                     : "text-dark-secondary hover:text-dark-primary"
-                }`}
+                  }`}
               >
                 {status === "ALL" ? "Todos" : status}
               </button>
@@ -462,8 +473,7 @@ export default function ReservationsPage() {
                             Modificar
                           </button>
 
-                          {(res.estado === "EN_CURSO" ||
-                            res.estado === "COMPLETADA") && (
+                          {(res.estado === "EN_CURSO" || res.estado === "COMPLETADA") && (
                             <button
                               onClick={() => handleBilling(res)}
                               className="text-xs font-bold text-blue-600 hover:text-blue-700 px-2.5 py-1 hover:bg-blue-50 rounded-lg"
@@ -472,27 +482,34 @@ export default function ReservationsPage() {
                             </button>
                           )}
 
-                          {res.estado === "EN_CURSO" ? (
+                          {res.estado === "EN_CURSO" && (
                             <button
                               onClick={() => handleAddConsumos(res)}
                               className="text-xs font-bold text-emerald-600 hover:text-emerald-700 px-2.5 py-1 hover:bg-emerald-50 rounded-lg"
                             >
                               + Consumos
                             </button>
-                          ) : res.estado === "PENDIENTE" ||
-                            res.estado === "CONFIRMADA" ? (
+                          )}
+
+                          {/* Check-In — solo para PENDIENTE o CONFIRMADA */}
+                          {(res.estado === "PENDIENTE" || res.estado === "CONFIRMADA") && (
                             <button
-                              onClick={() =>
-                                handleCheckIn(
-                                  res.huesped_nombre,
-                                  res.codigo_reserva,
-                                )
-                              }
-                              className="text-xs font-bold text-brand-blue hover:text-blue-700 px-2 py-1 hover:bg-blue-50 rounded-lg"
+                              onClick={() => handleCheckIn(res)}
+                              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 px-2.5 py-1 hover:bg-emerald-50 rounded-lg"
                             >
                               Check-In
                             </button>
-                          ) : null}
+                          )}
+
+                          {/* Check-Out — solo para EN_CURSO */}
+                          {res.estado === "EN_CURSO" && (
+                            <button
+                              onClick={() => handleCheckOut(res)}
+                              className="text-xs font-bold text-zinc-600 hover:text-zinc-800 px-2.5 py-1 hover:bg-zinc-100 rounded-lg"
+                            >
+                              Check-Out
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -628,6 +645,19 @@ export default function ReservationsPage() {
           if (!open) setBillingReservation(null);
         }}
         reservation={billingReservation}
+      />
+
+      <CheckInDialog
+        isOpen={isCheckInDialogOpen}
+        onOpenChange={setIsCheckInDialogOpen}
+        reservation={checkInReservation}
+        onSuccess={refetch}
+      />
+      <CheckOutDialog
+        isOpen={isCheckOutDialogOpen}
+        onOpenChange={setIsCheckOutDialogOpen}
+        reservation={checkOutReservation}
+        onSuccess={refetch}
       />
     </div>
   );
