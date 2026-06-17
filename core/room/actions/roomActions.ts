@@ -5,6 +5,10 @@ export const getRoomsAction = async (): Promise<Room[]> => {
   return apiClient.get<Room[]>("hotel/habitaciones");
 };
 
+export const getAvailableRoomsAction = async (): Promise<Room[]> => {
+  return apiClient.get<Room[]>("hotel/habitaciones?disponibles=true");
+};
+
 export const createRoomAction = async (request: CreateRoomRequest): Promise<void> => {
   return apiClient.post<void>("hotel/habitaciones", request);
 };
