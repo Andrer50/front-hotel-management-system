@@ -44,3 +44,13 @@ export interface GuestUI {
   initials: string;
   domainData: Guest;
 }
+
+export interface SelectGuest {
+  id: number;
+  nombre_completo: string;
+  documento: string;
+}
+
+export interface GuestSelectData {
+  huespedes: SelectGuest[];
+}

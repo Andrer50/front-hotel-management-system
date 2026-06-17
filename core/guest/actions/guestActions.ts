@@ -1,15 +1,28 @@
 import { apiClient } from "@/lib/http-client";
-import { Guest, CreateGuestRequest, UpdateGuestRequest } from "../interfaces";
+import {
+  Guest,
+  CreateGuestRequest,
+  UpdateGuestRequest,
+  GuestSelectData,
+} from "../interfaces";
 
 export const getGuestsAction = async (): Promise<Guest[]> => {
   return apiClient.get<Guest[]>("hotel/huespedes");
 };
 
-export const createGuestAction = async (request: CreateGuestRequest): Promise<void> => {
-  return apiClient.post<void>("hotel/huespedes", request);
+export const getGuestSelectDataAction = async (): Promise<GuestSelectData> => {
+  return apiClient.get<GuestSelectData>("hotel/select-data");
 };
 
-export const updateGuestAction = async (request: UpdateGuestRequest): Promise<Guest> => {
+export const createGuestAction = async (
+  request: CreateGuestRequest,
+): Promise<Guest> => {
+  return apiClient.post<Guest>("hotel/huespedes", request);
+};
+
+export const updateGuestAction = async (
+  request: UpdateGuestRequest,
+): Promise<Guest> => {
   const { id, ...data } = request;
   return apiClient.patch<Guest>(`hotel/huespedes/${id}`, data);
 };

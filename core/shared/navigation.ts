@@ -7,17 +7,17 @@ import {
   AlertTriangle,
   Building2,
   Package,
-  Briefcase,
   BarChart3,
-  Sparkles,
   Shield,
   Brush,
+  Receipt,
+  LucideIcon,
 } from "lucide-react";
 
 export interface NavItem {
   name: string;
   href: string;
-  icon: any;
+  icon: LucideIcon;
   permission?: string;
 }
 
@@ -43,6 +43,12 @@ export const navigationItems: NavItem[] = [
     name: "Reservas",
     href: "/dashboard/admin/reservations",
     icon: CalendarDays,
+    permission: "can_manage_reservations",
+  },
+  {
+    name: "Pagos",
+    href: "/dashboard/admin/payments",
+    icon: Receipt,
     permission: "can_manage_reservations",
   },
   {

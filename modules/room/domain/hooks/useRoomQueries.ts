@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getRoomsAction } from "@/core/room/actions/roomActions";
+import { getRoomsAction, getAvailableRoomsAction } from "@/core/room/actions/roomActions";
 
 export const useGetRoomsQuery = () => {
   return useQuery({
@@ -7,3 +7,11 @@ export const useGetRoomsQuery = () => {
     queryFn: getRoomsAction,
   });
 };
+
+export const useGetAvailableRoomsQuery = () => {
+  return useQuery({
+    queryKey: ["rooms", "available"],
+    queryFn: getAvailableRoomsAction,
+  });
+};
+

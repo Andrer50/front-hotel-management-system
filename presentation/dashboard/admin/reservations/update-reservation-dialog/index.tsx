@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,15 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { CreditCard, Loader2 } from "lucide-react";
-import { useSession } from "next-auth/react";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/hotel";
+import { CreditCard } from "lucide-react";
+import { useUpdateReservationMutation } from "@/modules/reservation/domain/hooks/useReservationMutations";
+import { Reservation } from "@/core/reservation/actions/reservationActions";
 
 interface UpdateReservationDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  reservation: any;
+  reservation: Reservation | null;
   onReservationUpdated: () => void;
 }
 
@@ -37,21 +35,14 @@ export function UpdateReservationDialog({
   reservation,
   onReservationUpdated,
 }: UpdateReservationDialogProps) {
-  const { data: session } = useSession();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    estado: "",
-    tarifa_aplicada: "",
+  const updateReservationMutation = useUpdateReservationMutation();
+  const [formData, setFormData] = useState<{
+    estado: Reservation["estado"];
+    tarifa_aplicada: string;
+  }>({
+    estado: reservation?.estado || "PENDIENTE",
+    tarifa_aplicada: reservation?.tarifa_aplicada?.toString() || "",
   });
-
-  useEffect(() => {
-    if (reservation && isOpen) {
-      setFormData({
-        estado: reservation.estado || "PENDIENTE",
-        tarifa_aplicada: reservation.tarifa_aplicada?.toString() || "",
-      });
-    }
-  }, [reservation, isOpen]);
 
   const estados = [
     { value: "PENDIENTE", label: "Pendiente" },
@@ -63,35 +54,31 @@ export function UpdateReservationDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (!reservation) return;
 
-    try {
-      const response = await fetch(`${API_BASE}/reservas/${reservation.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.accessToken}`,
-        },
-        body: JSON.stringify({
+    updateReservationMutation.mutate(
+      {
+        id: reservation.id,
+        data: {
           estado: formData.estado,
           tarifa_aplicada: parseFloat(formData.tarifa_aplicada),
-        }),
-      });
-
-      if (response.ok) {
-        toast.success("Reserva actualizada", {
-          description: `Estado: ${formData.estado}`,
-        });
-        onReservationUpdated();
-        onOpenChange(false);
-      } else {
-        toast.error("Error", { description: "No se pudo actualizar la reserva" });
-      }
-    } catch (error) {
-      toast.error("Error de conexión");
-    } finally {
-      setLoading(false);
-    }
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success("Reserva actualizada", {
+            description: `Estado: ${formData.estado}`,
+          });
+          onReservationUpdated();
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error("Error", {
+            description: error.message || "No se pudo actualizar la reserva",
+          });
+        },
+      },
+    );
   };
 
   if (!reservation) return null;
@@ -104,26 +91,48 @@ export function UpdateReservationDialog({
             Modificar Reserva
           </DialogTitle>
           <DialogDescription className="text-white/80 text-xs mt-1">
-            Código: {reservation.codigo_reserva} | Huésped: {reservation.huesped_nombre}
+            Código: {reservation.codigo_reserva} | Huésped:{" "}
+            {reservation.huesped_nombre}
           </DialogDescription>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
           {/* Estado */}
           <div>
-            <Label style={{ fontSize: "12px", fontWeight: "bold", color: "#1f2937", marginBottom: "4px", display: "block" }}>
+            <Label
+              style={{
+                fontSize: "12px",
+                fontWeight: "bold",
+                color: "#1f2937",
+                marginBottom: "4px",
+                display: "block",
+              }}
+            >
               Estado de Reserva
             </Label>
             <Select
               value={formData.estado}
-              onValueChange={(val) => setFormData({ ...formData, estado: val })}
+              onValueChange={(val) => setFormData({ ...formData, estado: val as Reservation["estado"] })}
             >
-              <SelectTrigger style={{ height: "40px", fontSize: "14px", borderRadius: "12px", backgroundColor: "white", borderColor: "#d1d5db", color: "#111827" }}>
+              <SelectTrigger
+                style={{
+                  height: "40px",
+                  fontSize: "14px",
+                  borderRadius: "12px",
+                  backgroundColor: "white",
+                  borderColor: "#d1d5db",
+                  color: "#111827",
+                }}
+              >
                 <SelectValue placeholder="Seleccione un estado" />
               </SelectTrigger>
               <SelectContent>
                 {estados.map((e) => (
-                  <SelectItem key={e.value} value={e.value} style={{ color: "#111827" }}>
+                  <SelectItem
+                    key={e.value}
+                    value={e.value}
+                    style={{ color: "#111827" }}
+                  >
                     {e.label}
                   </SelectItem>
                 ))}
@@ -133,34 +142,83 @@ export function UpdateReservationDialog({
 
           {/* Tarifa */}
           <div>
-            <Label style={{ fontSize: "12px", fontWeight: "bold", color: "#1f2937", marginBottom: "4px", display: "block" }}>
-              <CreditCard style={{ height: "12px", width: "12px", display: "inline", marginRight: "4px" }} /> Tarifa por noche (S/.)
+            <Label
+              style={{
+                fontSize: "12px",
+                fontWeight: "bold",
+                color: "#1f2937",
+                marginBottom: "4px",
+                display: "block",
+              }}
+            >
+              <CreditCard
+                style={{
+                  height: "12px",
+                  width: "12px",
+                  display: "inline",
+                  marginRight: "4px",
+                }}
+              />{" "}
+              Tarifa por noche (S/.)
             </Label>
             <Input
               type="number"
               step="0.01"
               value={formData.tarifa_aplicada}
-              onChange={(e) => setFormData({ ...formData, tarifa_aplicada: e.target.value })}
-              style={{ height: "40px", fontSize: "14px", borderRadius: "12px", backgroundColor: "white", borderColor: "#d1d5db", color: "#111827" }}
+              onChange={(e) =>
+                setFormData({ ...formData, tarifa_aplicada: e.target.value })
+              }
+              style={{
+                height: "40px",
+                fontSize: "14px",
+                borderRadius: "12px",
+                backgroundColor: "white",
+                borderColor: "#d1d5db",
+                color: "#111827",
+              }}
             />
           </div>
 
           {/* Botones */}
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px", backgroundColor: "white", paddingTop: "8px", position: "sticky", bottom: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "8px",
+              marginTop: "16px",
+              backgroundColor: "white",
+              paddingTop: "8px",
+              position: "sticky",
+              bottom: 0,
+            }}
+          >
             <Button
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              style={{ fontSize: "14px", borderRadius: "12px", color: "#4b5563" }}
+              style={{
+                fontSize: "14px",
+                borderRadius: "12px",
+                color: "#4b5563",
+              }}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              disabled={loading}
-              style={{ backgroundColor: "#d97706", color: "white", fontSize: "14px", borderRadius: "12px", paddingLeft: "20px", paddingRight: "20px" }}
+              disabled={updateReservationMutation.isPending}
+              style={{
+                backgroundColor: "#d97706",
+                color: "white",
+                fontSize: "14px",
+                borderRadius: "12px",
+                paddingLeft: "20px",
+                paddingRight: "20px",
+              }}
             >
-              {loading ? "Guardando..." : "Actualizar Reserva"}
+              {updateReservationMutation.isPending
+                ? "Guardando..."
+                : "Actualizar Reserva"}
             </Button>
           </div>
         </form>
