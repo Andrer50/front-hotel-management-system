@@ -32,6 +32,10 @@ import { useDeleteCommonAreaMutation } from "@/modules/common-area/domain/hooks/
 import { CommonArea, CommonAreaEstado } from "@/core/common-area/interfaces";
 import { CreateCommonAreaDialog } from "@/presentation/dashboard/admin/common-areas/create-common-area-dialog";
 import { UpdateCommonAreaDialog } from "@/presentation/dashboard/admin/common-areas/update-common-area-dialog";
+import { useGetAforosQuery } from "@/modules/common-area/domain/hooks/useAforoQueries";
+import { RegistroAforo } from "@/core/common-area/interfaces";
+import { CreateAforoDialog } from "@/presentation/dashboard/admin/common-areas/create-aforo-dialog";
+import { ManageAforoDialog } from "@/presentation/dashboard/admin/common-areas/manage-aforo-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -47,6 +51,10 @@ export default function CommonAreasPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState<CommonArea | null>(null);
+  const { data: aforos = [], isLoading: isLoadingAforos } = useGetAforosQuery();
+  const [isCreateAforoOpen, setIsCreateAforoOpen] = useState(false);
+  const [isManageAforoOpen, setIsManageAforoOpen] = useState(false);
+  const [selectedAforo, setSelectedAforo] = useState<RegistroAforo | null>(null);
 
   const categories = ["Todos", "Interiores", "Exteriores"];
 
@@ -250,6 +258,79 @@ export default function CommonAreasPage() {
           </div>
         )}
       </div>
+
+      {/* SECCIÓN DE RESERVAS DE AFORO */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-end">
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold tracking-tight uppercase text-zinc-900">Reservas de Aforo</h3>
+            <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Gestión de accesos por huésped</p>
+          </div>
+          <Button 
+            onClick={() => setIsCreateAforoOpen(true)} 
+            className="h-11 bg-zinc-900 hover:bg-black text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md transition-all px-6 cursor-pointer"
+          >
+            Nueva Reserva
+          </Button>
+        </div>
+
+        <div className="bg-white border border-zinc-100 rounded-[1.5rem] overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-zinc-50 border-b border-zinc-100">
+                <tr>
+                  <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Huésped</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Área</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Ingreso Prog.</th>
+                  <th className="px-6 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Estado</th>
+                  <th className="px-6 py-4 text-right text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-50">
+                {isLoadingAforos ? (
+                  <tr><td colSpan={5} className="p-8 text-center text-zinc-400 text-xs font-bold uppercase tracking-widest">Cargando...</td></tr>
+                ) : aforos.length === 0 ? (
+                  <tr><td colSpan={5} className="p-8 text-center text-zinc-400 text-xs font-bold uppercase tracking-widest">No hay reservas</td></tr>
+                ) : (
+                  aforos.map((aforo) => (
+                    <tr key={aforo.id} className="hover:bg-zinc-50/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-zinc-900">{aforo.huesped_details.nombre_completo}</td>
+                      <td className="px-6 py-4 text-zinc-600">{aforo.area_comun_nombre}</td>
+                      <td className="px-6 py-4 text-zinc-500 text-xs">{new Date(aforo.fecha_ingreso_programada).toLocaleString()}</td>
+                      <td className="px-6 py-4">
+                        <Badge variant="outline" className={`
+                          font-bold text-[10px] uppercase tracking-widest
+                          ${aforo.estado === 'EN_CURSO' ? 'bg-amber-50 text-amber-600 border-amber-200' : ''}
+                          ${aforo.estado === 'CONFIRMADA' ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}
+                          ${aforo.estado === 'PENDIENTE' ? 'bg-zinc-100 text-zinc-600' : ''}
+                          ${aforo.estado === 'COMPLETADA' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : ''}
+                          ${aforo.estado === 'CANCELADA' ? 'bg-red-50 text-red-600 border-red-200' : ''}
+                        `}>
+                          {aforo.estado_display}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="font-bold text-[10px] uppercase tracking-widest text-zinc-500 hover:text-zinc-900 rounded-lg cursor-pointer"
+                          onClick={() => { setSelectedAforo(aforo); setIsManageAforoOpen(true); }}
+                        >
+                          Gestionar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* COMPONENTES DIALOG (Al final del archivo, junto a los otros dialogs) */}
+      <CreateAforoDialog open={isCreateAforoOpen} onOpenChange={setIsCreateAforoOpen} />
+      <ManageAforoDialog open={isManageAforoOpen} onOpenChange={setIsManageAforoOpen} aforo={selectedAforo} />
 
       {/* Floating Action Button (Optional for Add) */}
       <button
