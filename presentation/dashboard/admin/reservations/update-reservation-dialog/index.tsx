@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,8 @@ import {
 import { toast } from "sonner";
 import { CreditCard } from "lucide-react";
 import { useUpdateReservationMutation } from "@/modules/reservation/domain/hooks/useReservationMutations";
-import { Reservation } from "@/core/reservation/actions/reservationActions";
+// 🚀 SOLUCIÓN: Ahora jala la interfaz real del archivo correcto
+import { Reservation } from "@/core/reservation/interfaces";
 
 interface UpdateReservationDialogProps {
   isOpen: boolean;
@@ -36,13 +37,24 @@ export function UpdateReservationDialog({
   onReservationUpdated,
 }: UpdateReservationDialogProps) {
   const updateReservationMutation = useUpdateReservationMutation();
+  
   const [formData, setFormData] = useState<{
     estado: Reservation["estado"];
     tarifa_aplicada: string;
   }>({
-    estado: reservation?.estado || "PENDIENTE",
-    tarifa_aplicada: reservation?.tarifa_aplicada?.toString() || "",
+    estado: "PENDIENTE",
+    tarifa_aplicada: "",
   });
+
+  // Sincroniza el formulario cuando el modal recibe una reserva seleccionada
+  useEffect(() => {
+    if (reservation) {
+      setFormData({
+        estado: reservation.estado || "PENDIENTE",
+        tarifa_aplicada: reservation.tarifa_aplicada?.toString() || "",
+      });
+    }
+  }, [reservation, isOpen]);
 
   const estados = [
     { value: "PENDIENTE", label: "Pendiente" },

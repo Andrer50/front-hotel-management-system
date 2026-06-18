@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ import {
   X,
   Plus,
 } from "lucide-react";
+import { useSession } from "next-auth/react"; // ← Inyectamos useSession de NextAuth
 import { SelectGuest } from "@/core/guest/interfaces";
 import { useCreateGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 import { useGetGuestSelectDataQuery } from "@/modules/guest/domain/hooks/useGuestQueries";
@@ -47,6 +48,7 @@ export function CreateReservationDialog({
   onOpenChange,
   onReservationCreated,
 }: CreateReservationDialogProps) {
+  const { data: session }: any = useSession(); // ← Capturamos la sesión interna activa
   const createGuestMutation = useCreateGuestMutation();
   const createReservationMutation = useCreateReservationMutation();
 
@@ -67,6 +69,9 @@ export function CreateReservationDialog({
     origen: "DIRECTO",
   });
 
+  // ========== ESTADOS PARA LA TARIFA DINÁMICA POR TEMPORADA ==========
+  const [mensajeTemporada, setMensajeTemporada] = useState("");
+
   // Estados para el buscador autocomplete de huéspedes
   const [selectedGuest, setSelectedGuest] = useState<SelectGuest | null>(null);
   const [guestSearch, setGuestSearch] = useState("");
@@ -80,6 +85,72 @@ export function CreateReservationDialog({
         h.nombre_completo?.toLowerCase().includes(guestSearch.toLowerCase()),
     );
   }, [huespedes, guestSearch]);
+
+  // ========== LOGICA INTERNA: CÁLCULO DE TARIFA TOTALMENTE DINÁMICA POR % ==========
+  const calcularTarifaPorTemporada = async (fechaEntrada: string, habitacionId: string) => {
+    if (!fechaEntrada || !habitacionId) return;
+
+    // Buscamos la habitación seleccionada en la lista para sacar su precio_base real
+    const habitacionSeleccionada = habitaciones.find((h) => h.id.toString() === habitacionId);
+    if (!habitacionSeleccionada) return;
+
+    const precioBase = parseFloat(habitacionSeleccionada.precio_base) || 0;
+    const token = session?.accessToken || session?.user?.token || session?.token;
+
+    try {
+      const response = await fetch("http://localhost:8000/api/hotel/temporadas", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const resData = await response.json();
+
+      if (response.ok && resData.status === "success") {
+        const listaTemporadas = resData.data || [];
+        
+        // Convertimos la fecha de entrada digitada para compararla
+        const fechaTarget = new Date(fechaEntrada + "T00:00:00");
+
+        // Verificamos si cae en el rango de alguna temporada activa
+        const temporadaChoca = listaTemporadas.find((temp: any) => {
+          const inicio = new Date(temp.fecha_inicio + "T00:00:00");
+          const fin = new Date(temp.fecha_fin + "T00:00:00");
+          return fechaTarget >= inicio && fechaTarget <= fin;
+        });
+
+        if (temporadaChoca) {
+          // 🔥 LEEMOS EL PORCENTAJE REAL DE LA BASE DE DATOS. Si es undefined (old schemas), default a 0.
+          const porcentaje = temporadaChoca.porcentaje !== undefined ? temporadaChoca.porcentaje : 0;
+
+          // Operación matemática pura y limpia
+          const factor = 1 + (porcentaje / 100); // Ej: 30 -> 1.30 | -50 -> 0.50
+          const tarifaCalculada = precioBase * factor;
+
+          setFormData((prev) => ({ ...prev, tarifa_aplicada: tarifaCalculada.toFixed(2) }));
+
+          // Construimos el mensaje ideal para el recepcionista según el signo del porcentaje
+          if (porcentaje > 0) {
+            setMensajeTemporada(`📈 Tarifa Especial: ${temporadaChoca.nombre} (+${porcentaje}%)`);
+          } else if (porcentaje < 0) {
+            setMensajeTemporada(`📉 Descuento Aplicado: ${temporadaChoca.nombre} (${porcentaje}%)`);
+          } else {
+            setMensajeTemporada(`✨ Campaña activa: ${temporadaChoca.nombre} (Precio Base)`);
+          }
+        } else {
+          // Sin temporada: Tarifa normal de la habitación
+          setFormData((prev) => ({ ...prev, tarifa_aplicada: precioBase.toFixed(2) }));
+          setMensajeTemporada("");
+        }
+      }
+    } catch (error) {
+      console.error("Error cruzando tarifas con temporadas", error);
+    }
+  };
+
+  // Escucha cambios en la fecha de entrada o en la habitación para recalcular al instante
+  useEffect(() => {
+    if (formData.fecha_entrada && formData.habitacion) {
+      calcularTarifaPorTemporada(formData.fecha_entrada, formData.habitacion);
+    }
+  }, [formData.fecha_entrada, formData.habitacion, habitaciones]);
 
   const handleSelectGuest = (guest: SelectGuest) => {
     setSelectedGuest(guest);
@@ -118,8 +189,6 @@ export function CreateReservationDialog({
             nombre_completo: `${createdGuest.nombre} ${createdGuest.apellido}`,
             documento: createdGuest.documento,
           };
-
-          // Seleccionar automáticamente
           handleSelectGuest(newGuest);
         },
       },
@@ -147,6 +216,7 @@ export function CreateReservationDialog({
           onOpenChange(false);
           setSelectedGuest(null);
           setGuestSearch("");
+          setMensajeTemporada("");
           setFormData({
             huesped: "",
             habitacion: "",
@@ -190,7 +260,6 @@ export function CreateReservationDialog({
                 </Label>
 
                 {selectedGuest ? (
-                  /* Huésped Seleccionado */
                   <div className="flex items-center justify-between h-10 px-3 bg-zinc-50 border border-zinc-200 rounded-xl text-xs font-semibold">
                     <span className="text-zinc-800">
                       {selectedGuest.nombre_completo} (DNI:{" "}
@@ -207,7 +276,6 @@ export function CreateReservationDialog({
                     </Button>
                   </div>
                 ) : (
-                  /* Campo de Búsqueda Autocomplete */
                   <div className="relative">
                     <div className="relative">
                       <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -234,10 +302,8 @@ export function CreateReservationDialog({
                       )}
                     </div>
 
-                    {/* Dropdown flotante */}
                     {showGuestDropdown && (
                       <>
-                        {/* Backdrop invisible para cerrar el dropdown al hacer clic fuera */}
                         <div
                           className="fixed inset-0 z-10"
                           onClick={() => setShowGuestDropdown(false)}
@@ -274,8 +340,7 @@ export function CreateReservationDialog({
                                   ) : (
                                     <Plus className="h-3 w-3" />
                                   )}
-                                  Registrar Huésped Temporal (DNI: {guestSearch}
-                                  )
+                                  Registrar Huésped Temporal (DNI: {guestSearch})
                                 </Button>
                               )}
                             </div>
@@ -309,6 +374,49 @@ export function CreateReservationDialog({
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-bold flex items-center gap-1 mb-1">
+                    <Calendar className="h-3 w-3" /> Check-in
+                  </Label>
+                  <Input
+                    type="date"
+                    value={formData.fecha_entrada}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        fecha_entrada: e.target.value,
+                      })
+                    }
+                    className="h-10 text-xs rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold flex items-center gap-1 mb-1">
+                    <Calendar className="h-3 w-3" /> Check-out
+                  </Label>
+                  <Input
+                    type="date"
+                    value={formData.fecha_salida}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fecha_salida: e.target.value })
+                    }
+                    className="h-10 text-xs rounded-xl"
+                  />
+                </div>
+              </div>
+
+              {/* ========== ALERTA DE TEMPORADA REAL BASADA EN EL % DE LA BD ========== */}
+              {mensajeTemporada && (
+                <div className="text-[11px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 rounded-xl animate-fade-in flex items-center gap-1.5 shadow-xs">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  {mensajeTemporada}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
