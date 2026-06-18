@@ -54,18 +54,31 @@ export class HttpClient {
       (response: AxiosResponse<ApiResponse<unknown>>) => {
         const { data } = response;
 
-        if (data && typeof data === "object" && "code" in data) {
-          const apiData = data as ApiResponse<unknown>;
-          const codeNum = parseInt(apiData.code);
+        if (data && typeof data === "object") {
+          if ("code" in data) {
+            const apiData = data as ApiResponse<unknown>;
+            const codeNum = parseInt(apiData.code);
 
-          if (isNaN(codeNum) || codeNum < 200 || codeNum >= 300) {
-            throw new BusinessError(
-              apiData.code,
-              apiData.message || "Error de negocio",
-            );
+            if (isNaN(codeNum) || codeNum < 200 || codeNum >= 300) {
+              throw new BusinessError(
+                apiData.code,
+                apiData.message || "Error de negocio",
+              );
+            }
+
+            return { ...response, data: apiData.data };
           }
 
-          return { ...response, data: apiData.data };
+          if ("status" in data && "data" in data) {
+            const apiData = data as { status: string; data: unknown; message?: string };
+            if (apiData.status !== "success") {
+              throw new BusinessError(
+                "400",
+                apiData.message || "Error de negocio",
+              );
+            }
+            return { ...response, data: apiData.data };
+          }
         }
 
         return response;

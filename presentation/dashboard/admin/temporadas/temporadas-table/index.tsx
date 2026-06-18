@@ -113,8 +113,8 @@ export function TemporadasDashboardView() {
                         </td>
                         <td className="py-4">
                           <span className="text-xs font-semibold text-dark-secondary">
-                            {temp.fecha_inicio_formateada} -{" "}
-                            {temp.fecha_fin_formateada}
+                            {temp.fecha_inicio_formateada || temp.fecha_inicio}{" "}
+                            - {temp.fecha_fin_formateada || temp.fecha_fin}
                           </span>
                         </td>
                         <td className="py-4">
@@ -135,11 +135,11 @@ export function TemporadasDashboardView() {
                             ) : (
                               <XCircle className="h-3 w-3" />
                             )}
-                            {temp.estado_label}
+                            {temp.estado_label ||
+                              (temp.is_active ? "Activo" : "Inactivo")}
                           </span>
                         </td>
                         <td className="py-4 text-right flex items-center justify-end gap-2">
-                          {/* 🔥 NUEVO BOTÓN DE EDITAR: Carga la temporada en el formulario de la izquierda */}
                           <button
                             onClick={() => setTemporadaAEditar(temp)}
                             className="text-xs font-bold text-brand-blue hover:text-blue-700 p-2 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center gap-1 cursor-pointer"
