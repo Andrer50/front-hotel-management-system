@@ -2,7 +2,6 @@
 import React from 'react';
 
 export default function DashboardReportsPage() {
-  // Datos simulados del hotel basado en los KPIs requeridos por la rúbrica
   const kpis = [
     { title: "Tasa de Ocupación Promedio", value: "78.4%", change: "+4.2% esta semana", color: "#3b82f6" },
     { title: "Ingresos Totales (Sedes)", value: "S/. 45,280.00", change: "+12.8% vs mes anterior", color: "#10b981" },
