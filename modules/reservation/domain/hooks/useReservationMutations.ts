@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createReservationAction, updateReservationAction, deleteReservationAction } from "@/core/reservation/actions/reservationActions";
+import { 
+  createReservationAction, 
+  updateReservationAction, 
+  deleteReservationAction,
+  checkInReservationAction,
+  checkOutReservationAction,
+} from "@/core/reservation/actions/reservationActions";
 
 export const useCreateReservationMutation = () => {
   const queryClient = useQueryClient();
@@ -33,6 +39,34 @@ export const useDeleteReservationMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+  });
+};
+
+export const useCheckInMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, observaciones }: { id: number; observaciones?: string }) =>
+      checkInReservationAction(id, observaciones),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] }); // 👈 refresca habitaciones también
+    },
+  });
+};
+
+export const useCheckOutMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, observaciones }: { id: number; observaciones?: string }) =>
+      checkOutReservationAction(id, observaciones),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+      queryClient.invalidateQueries({ queryKey: ["rooms"] }); // 👈 refresca habitaciones también
     },
   });
 };

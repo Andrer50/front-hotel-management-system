@@ -378,6 +378,7 @@ export function CreateReservationDialog({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs font-bold flex items-center gap-1 mb-1">
+<<<<<<< HEAD
                     <Calendar className="h-3 w-3" /> Check-in
                   </Label>
                   <Input
@@ -421,6 +422,8 @@ export function CreateReservationDialog({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs font-bold flex items-center gap-1 mb-1">
+=======
+>>>>>>> c429406ee608bec84c76bd1c1094c343f1e949d1
                     <CreditCard className="h-3 w-3" /> Tarifa x noche
                   </Label>
                   <Input
