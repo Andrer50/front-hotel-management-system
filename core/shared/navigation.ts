@@ -3,6 +3,7 @@ import {
   Layers,
   Users,
   CalendarDays,
+  Calendar, // ← Icono limpio para tus Temporadas
   BedDouble,
   AlertTriangle,
   Building2,
@@ -56,6 +57,12 @@ export const navigationItems: NavItem[] = [
     href: "/dashboard/admin/rooms",
     icon: BedDouble,
     permission: "can_manage_rooms",
+  },
+  {
+    name: "Temporadas",
+    href: "/dashboard/admin/temporadas",
+    icon: Calendar, // Tu nuevo botón tuning
+    permission: "can_manage_rooms", // Protegido con el rol de administración de cuartos
   },
   {
     name: "Estados de Limpieza",
