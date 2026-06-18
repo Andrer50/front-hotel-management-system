@@ -23,7 +23,6 @@ import { useUpdateRoleMutation } from "@/modules/role/domain/hooks/useUpdateRole
 import { permissionTranslations } from "@/modules/role/features/constants";
 
 export default function RolesManagementPage() {
-  const { session } = useSessionContext();
   const [activeRoleId, setActiveRoleId] = useState<number | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
@@ -33,7 +32,8 @@ export default function RolesManagementPage() {
   } | null>(null);
 
   const { data: roles = [], isLoading: isLoadingRoles } = useGetRolesQuery();
-  const { data: permissions = [], isLoading: isLoadingPermissions } = useGetPermissionsQuery();
+  const { data: permissions = [], isLoading: isLoadingPermissions } =
+    useGetPermissionsQuery();
 
   const updateRoleMutation = useUpdateRoleMutation();
 
@@ -175,7 +175,12 @@ export default function RolesManagementPage() {
   }
 
   const getPermissionInfo = (codename: string) => {
-    return permissionTranslations[codename] || { title: codename, desc: "Sin descripción disponible." };
+    return (
+      permissionTranslations[codename] || {
+        title: codename,
+        desc: "Sin descripción disponible.",
+      }
+    );
   };
 
   return (
@@ -304,9 +309,9 @@ export default function RolesManagementPage() {
                 <h2 className="text-2xl font-extrabold text-dark-primary tracking-tight">
                   Permisos de {activeRole?.name || ""}
                 </h2>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setIsUpdateOpen(true)}
                   className="h-8 w-8 text-brand-blue hover:text-blue-700 hover:bg-blue-50 rounded-full"
                 >
@@ -409,6 +414,7 @@ export default function RolesManagementPage() {
         availablePermissions={permissions}
       />
       <UpdateRoleDialog
+        key={activeRole ? `${activeRole.id}-${isUpdateOpen}` : "none"}
         isOpen={isUpdateOpen}
         onOpenChange={setIsUpdateOpen}
         role={activeRole || null}

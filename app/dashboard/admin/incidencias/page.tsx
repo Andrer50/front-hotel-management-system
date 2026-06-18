@@ -29,7 +29,13 @@ import {
 import { CreateIncidenciaDialog } from "@/presentation/dashboard/admin/incidencias/create-incidencia-dialog";
 import { UpdateIncidenciaDialog } from "@/presentation/dashboard/admin/incidencias/update-incidencia-dialog";
 
-const ESTADO_FILTERS = ["Todos", "PENDIENTE", "EN_PROGRESO", "RESUELTO", "CANCELADO"] as const;
+const ESTADO_FILTERS = [
+  "Todos",
+  "PENDIENTE",
+  "EN_PROGRESO",
+  "RESUELTO",
+  "CANCELADO",
+] as const;
 const PRIORIDAD_FILTERS = ["Todas", "ALTA", "MEDIA", "BAJA"] as const;
 
 export default function IncidenciasPage() {
@@ -39,9 +45,11 @@ export default function IncidenciasPage() {
   const [prioridadFilter, setPrioridadFilter] = useState<string>("Todas");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
-  const [selectedIncidencia, setSelectedIncidencia] = useState<Incidencia | null>(null);
+  const [selectedIncidencia, setSelectedIncidencia] =
+    useState<Incidencia | null>(null);
 
-  const { data: activas = [], isLoading: loadingActivas } = useGetIncidenciasQuery();
+  const { data: activas = [], isLoading: loadingActivas } =
+    useGetIncidenciasQuery();
   const { data: todas = [], isLoading: loadingTodas } =
     useGetIncidenciasConResueltasQuery(includeResueltas);
 
@@ -93,10 +101,13 @@ export default function IncidenciasPage() {
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
                   Portal de Mantenimiento
                 </span>
-                <h2 className="text-3xl font-bold tracking-tight">Incidencias</h2>
+                <h2 className="text-3xl font-bold tracking-tight">
+                  Incidencias
+                </h2>
               </div>
               <p className="text-blue-100/80 text-sm font-medium max-w-[280px] leading-relaxed">
-                Gestión centralizada de reportes de habitaciones y áreas comunes.
+                Gestión centralizada de reportes de habitaciones y áreas
+                comunes.
               </p>
             </div>
             <div className="text-5xl font-bold tracking-tighter opacity-90">
@@ -143,7 +154,9 @@ export default function IncidenciasPage() {
             onChange={(e) => setIncludeResueltas(e.target.checked)}
             className="rounded border-zinc-300"
           />
-          <span className="text-xs font-bold text-zinc-600">Incluir resueltas</span>
+          <span className="text-xs font-bold text-zinc-600">
+            Incluir resueltas
+          </span>
         </label>
       </div>
 
@@ -170,17 +183,23 @@ export default function IncidenciasPage() {
         ) : (
           <>
             {activasList.map((inc) => (
-              <IncidenciaCard key={inc.id} incidencia={inc} onClick={() => handleSelect(inc)} />
+              <IncidenciaCard
+                key={inc.id}
+                incidencia={inc}
+                onClick={() => handleSelect(inc)}
+              />
             ))}
-            {includeResueltas && activasList.length > 0 && resueltasList.length > 0 && (
-              <div className="flex items-center gap-2 py-2">
-                <div className="h-px flex-1 bg-zinc-200" />
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                  Resueltas / Canceladas
-                </span>
-                <div className="h-px flex-1 bg-zinc-200" />
-              </div>
-            )}
+            {includeResueltas &&
+              activasList.length > 0 &&
+              resueltasList.length > 0 && (
+                <div className="flex items-center gap-2 py-2">
+                  <div className="h-px flex-1 bg-zinc-200" />
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                    Resueltas / Canceladas
+                  </span>
+                  <div className="h-px flex-1 bg-zinc-200" />
+                </div>
+              )}
             {(includeResueltas ? resueltasList : []).map((inc) => (
               <IncidenciaCard
                 key={inc.id}
@@ -200,10 +219,17 @@ export default function IncidenciasPage() {
         <Plus className="h-8 w-8" />
       </button>
 
-      <CreateIncidenciaDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      <CreateIncidenciaDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
 
       <UpdateIncidenciaDialog
-        key={selectedIncidencia?.id ?? "none"}
+        key={
+          selectedIncidencia
+            ? `update-${selectedIncidencia.id}-${isUpdateOpen}`
+            : "none"
+        }
         open={isUpdateOpen}
         onOpenChange={setIsUpdateOpen}
         incidencia={selectedIncidencia}
@@ -295,7 +321,7 @@ function IncidenciaCard({
   const estadoConfig = getEstadoConfig(incidencia.estado);
   const ubicacion = incidencia.habitacion_numero
     ? `Hab. ${incidencia.habitacion_numero}`
-    : incidencia.area_comun_nombre ?? "Sin ubicación";
+    : (incidencia.area_comun_nombre ?? "Sin ubicación");
 
   return (
     <div
@@ -343,12 +369,19 @@ function IncidenciaCard({
               {incidencia.asignado_a_details?.full_name ?? "Sin asignar"}
             </span>
           </div>
-          <span className="text-[11px] font-bold text-zinc-400">{ubicacion}</span>
+          <span className="text-[11px] font-bold text-zinc-400">
+            {ubicacion}
+          </span>
         </div>
       </div>
 
       <div className="flex flex-col items-end gap-2 shrink-0">
-        <div className={cn("px-3 py-1 rounded-lg flex items-center gap-2", estadoConfig.color)}>
+        <div
+          className={cn(
+            "px-3 py-1 rounded-lg flex items-center gap-2",
+            estadoConfig.color,
+          )}
+        >
           <div className={cn("h-1.5 w-1.5 rounded-full", estadoConfig.dot)} />
           <span className="text-[10px] font-bold uppercase tracking-widest">
             {estadoConfig.label}
@@ -368,7 +401,6 @@ function IncidenciaCard({
     </div>
   );
 }
-
 
 function getPrioridadConfig(prioridad: IncidenciaPrioridad) {
   switch (prioridad) {
@@ -396,14 +428,34 @@ function getPrioridadConfig(prioridad: IncidenciaPrioridad) {
 function getEstadoConfig(estado: IncidenciaEstado) {
   switch (estado) {
     case "PENDIENTE":
-      return { color: "bg-amber-50 text-amber-600", label: "Pendiente", dot: "bg-amber-500" };
+      return {
+        color: "bg-amber-50 text-amber-600",
+        label: "Pendiente",
+        dot: "bg-amber-500",
+      };
     case "EN_PROGRESO":
-      return { color: "bg-blue-50 text-blue-600", label: "En progreso", dot: "bg-blue-500" };
+      return {
+        color: "bg-blue-50 text-blue-600",
+        label: "En progreso",
+        dot: "bg-blue-500",
+      };
     case "RESUELTO":
-      return { color: "bg-emerald-50 text-emerald-600", label: "Resuelto", dot: "bg-emerald-500" };
+      return {
+        color: "bg-emerald-50 text-emerald-600",
+        label: "Resuelto",
+        dot: "bg-emerald-500",
+      };
     case "CANCELADO":
-      return { color: "bg-zinc-100 text-zinc-500", label: "Cancelado", dot: "bg-zinc-400" };
+      return {
+        color: "bg-zinc-100 text-zinc-500",
+        label: "Cancelado",
+        dot: "bg-zinc-400",
+      };
     default:
-      return { color: "bg-zinc-50 text-zinc-400", label: estado, dot: "bg-zinc-300" };
+      return {
+        color: "bg-zinc-50 text-zinc-400",
+        label: estado,
+        dot: "bg-zinc-300",
+      };
   }
 }

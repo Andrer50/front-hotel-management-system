@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  createReservationAction, 
-  updateReservationAction, 
+import {
+  createReservationAction,
+  updateReservationAction,
   deleteReservationAction,
   checkInReservationAction,
   checkOutReservationAction,
 } from "@/core/reservation/actions/reservationActions";
+import { UpdateReservationRequest } from "@/core/reservation/interfaces";
 
 export const useCreateReservationMutation = () => {
   const queryClient = useQueryClient();
@@ -23,7 +24,13 @@ export const useUpdateReservationMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => updateReservationAction(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: UpdateReservationRequest;
+    }) => updateReservationAction(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
@@ -47,8 +54,13 @@ export const useCheckInMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, observaciones }: { id: number; observaciones?: string }) =>
-      checkInReservationAction(id, observaciones),
+    mutationFn: ({
+      id,
+      observaciones,
+    }: {
+      id: number;
+      observaciones?: string;
+    }) => checkInReservationAction(id, observaciones),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });
@@ -61,8 +73,13 @@ export const useCheckOutMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, observaciones }: { id: number; observaciones?: string }) =>
-      checkOutReservationAction(id, observaciones),
+    mutationFn: ({
+      id,
+      observaciones,
+    }: {
+      id: number;
+      observaciones?: string;
+    }) => checkOutReservationAction(id, observaciones),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reservations"] });
       queryClient.invalidateQueries({ queryKey: ["stats"] });

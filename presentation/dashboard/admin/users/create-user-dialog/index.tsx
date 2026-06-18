@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
@@ -63,7 +62,7 @@ export function CreateUserDialog({
       setPhone("");
       setErrors({});
       onOpenChange(false);
-    }
+    },
   });
 
   const validateForm = () => {
@@ -108,12 +107,12 @@ export function CreateUserDialog({
             description: `Se ha registrado a ${firstName} ${lastName} correctamente.`,
           });
         },
-        onError: (e: any) => {
+        onError: (e) => {
           toast.error("Error al registrar personal", {
             description: e.message || "No se pudo conectar con el servidor.",
           });
         },
-      }
+      },
     );
   };
 

@@ -4,13 +4,17 @@ import { Plus, Loader2, TrendingUp, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useSession } from "next-auth/react"; 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { 
+  useCreateTemporadaMutation, 
+  useUpdateTemporadaMutation 
+} from "@/modules/temporada/domain/hooks/useTemporadaMutations";
+import { Temporada } from "@/core/temporada/interfaces";
 
 interface CreateTemporadaDialogProps {
   onTemporadaCreated: () => void;
-  temporadaAEditar: any | null;       // ← Recibe la temporada seleccionada
-  setTemporadaAEditar: (val: any | null) => void; // ← Función para limpiar estado
+  temporadaAEditar: Temporada | null;       // ← Recibe la temporada seleccionada
+  setTemporadaAEditar: (val: Temporada | null) => void; // ← Función para limpiar estado
 }
 
 export function CreateTemporadaDialog({ 
@@ -18,25 +22,17 @@ export function CreateTemporadaDialog({
   temporadaAEditar, 
   setTemporadaAEditar 
 }: CreateTemporadaDialogProps) {
-  const { data: session }: any = useSession(); 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [nombre, setNombre] = useState("");
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-  const [porcentaje, setPorcentaje] = useState("");
+  const createMutation = useCreateTemporadaMutation();
+  const updateMutation = useUpdateTemporadaMutation();
 
-  // 🔥 EFECTO SENSOR: Si el admin hace clic en "Editar", autollena el formulario al toque
-  useEffect(() => {
-    if (temporadaAEditar) {
-      setNombre(temporadaAEditar.nombre || "");
-      setFechaInicio(temporadaAEditar.fecha_inicio || "");
-      setFechaFin(temporadaAEditar.fecha_fin || "");
-      setPorcentaje(temporadaAEditar.porcentaje !== undefined ? temporadaAEditar.porcentaje.toString() : "");
-    } else {
-      // Si se limpia, vacía el formulario
-      limpiarFormulario();
-    }
-  }, [temporadaAEditar]);
+  const [nombre, setNombre] = useState(temporadaAEditar?.nombre || "");
+  const [fechaInicio, setFechaInicio] = useState(temporadaAEditar?.fecha_inicio || "");
+  const [fechaFin, setFechaFin] = useState(temporadaAEditar?.fecha_fin || "");
+  const [porcentaje, setPorcentaje] = useState(
+    temporadaAEditar?.porcentaje !== undefined ? temporadaAEditar.porcentaje.toString() : ""
+  );
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const limpiarFormulario = () => {
     setNombre("");
@@ -46,7 +42,7 @@ export function CreateTemporadaDialog({
     setTemporadaAEditar(null);
   };
 
-  const handleSaveTemporada = async (e: React.FormEvent) => {
+  const handleSaveTemporada = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!nombre || !fechaInicio || !fechaFin || !porcentaje) {
@@ -54,44 +50,48 @@ export function CreateTemporadaDialog({
       return;
     }
 
-    setIsSubmitting(true);
-    const token = session?.accessToken || session?.user?.token || session?.token;
+    const valorPorcentaje = parseInt(porcentaje);
+    if (isNaN(valorPorcentaje)) {
+      toast.warning("Impacto inválido", { description: "Por favor introduce un número válido." });
+      return;
+    }
 
-    // Definiendo si es una actualización (PUT) o una creación nueva (POST)
-    const esEdicion = !!temporadaAEditar;
-    const url = esEdicion 
-      ? `http://localhost:8000/api/hotel/temporadas/${temporadaAEditar.id}` 
-      : "http://localhost:8000/api/hotel/temporadas";
-    const metodo = esEdicion ? "PUT" : "POST";
+    const data = { 
+      nombre, 
+      fecha_inicio: fechaInicio, 
+      fecha_fin: fechaFin, 
+      porcentaje: valorPorcentaje, 
+      is_active: true 
+    };
 
-    try {
-      const response = await fetch(url, {
-        method: metodo,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ 
-          nombre, 
-          fecha_inicio: fechaInicio, 
-          fecha_fin: fechaFin, 
-          porcentaje: parseInt(porcentaje), 
-          is_active: true 
-        }),
-      });
-
-      const resData = await response.json();
-      if (response.ok) {
-        toast.success(esEdicion ? "¡Temporada Actualizada!" : "¡Temporada Creada!");
-        limpiarFormulario();
-        onTemporadaCreated();
-      } else {
-        toast.error("Error al guardar", { description: resData.message });
-      }
-    } catch (error) {
-      toast.error("Error de conexión con el servidor");
-    } finally {
-      setIsSubmitting(false);
+    if (temporadaAEditar) {
+      updateMutation.mutate(
+        { id: temporadaAEditar.id, data },
+        {
+          onSuccess: () => {
+            toast.success("¡Temporada Actualizada!");
+            limpiarFormulario();
+            onTemporadaCreated();
+          },
+          onError: (error: Error) => {
+            toast.error("Error al guardar", { description: error.message || "Error al actualizar la temporada" });
+          }
+        }
+      );
+    } else {
+      createMutation.mutate(
+        data,
+        {
+          onSuccess: () => {
+            toast.success("¡Temporada Creada!");
+            limpiarFormulario();
+            onTemporadaCreated();
+          },
+          onError: (error: Error) => {
+            toast.error("Error al guardar", { description: error.message || "Error al crear la temporada" });
+          }
+        }
+      );
     }
   };
 
@@ -142,14 +142,14 @@ export function CreateTemporadaDialog({
         {/* El botón cambia dinámicamente de color y texto si es creación o edición */}
         <Button 
           type="submit" 
-          disabled={isSubmitting} 
+          disabled={isPending} 
           className={`mt-2 h-11 w-full text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
             temporadaAEditar 
               ? "bg-blue-600 hover:bg-blue-700 shadow-blue-600/15" 
               : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/15"
           }`}
         >
-          {isSubmitting ? (
+          {isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : temporadaAEditar ? (
             <Save className="h-4 w-4" />

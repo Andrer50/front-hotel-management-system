@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
@@ -59,7 +58,7 @@ export function UpdateUserDialog({
   const updateUserMutation = useUpdateUserMutation({
     onSuccess: () => {
       onOpenChange(false);
-    }
+    },
   });
 
   // Ajustar el estado síncronamente cuando el usuario cambia o el diálogo se abre
@@ -123,7 +122,7 @@ export function UpdateUserDialog({
             description: e.message || "No se pudo conectar con el servidor.",
           });
         },
-      }
+      },
     );
   };
 

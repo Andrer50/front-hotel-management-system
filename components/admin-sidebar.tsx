@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useSessionContext } from "@/context/session-context";
 import { cn } from "@/lib/utils";
-import { Hotel, HelpCircle, LogOut } from "lucide-react";
+import { Hotel, LogOut } from "lucide-react";
 import { navigationItems } from "@/core/shared/navigation";
 import {
   Sidebar,
@@ -22,7 +22,6 @@ export function AdminSidebar() {
   const { session } = useSessionContext();
 
   const userPermissions = session?.user?.permissions || [];
-  const userRole = session?.user?.role;
 
   const filteredItems = navigationItems.filter((item) => {
     // Si no tiene permiso requerido, se muestra a todos

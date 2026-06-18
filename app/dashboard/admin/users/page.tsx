@@ -6,7 +6,6 @@ import {
   Sparkles,
   SlidersHorizontal,
   Filter,
-  MoreVertical,
   Search,
   ChevronLeft,
   ChevronRight,
@@ -43,8 +42,9 @@ export default function UsersManagementPage() {
       name: `${u.firstName || ""} ${u.lastName || ""}`.trim() || u.username,
       email: u.email,
       role: u.role_details?.name || "Sin Rol",
-      department: (u.role_details?.name || "Recepción") as any,
-      status: u.status === "ACTIVE" ? ("Activo" as const) : ("Inactivo" as const),
+      department: u.role_details?.name || "Recepción",
+      status:
+        u.status === "ACTIVE" ? ("Activo" as const) : ("Inactivo" as const),
       avatarBg: "bg-blue-100 text-blue-600",
       initials:
         (u.firstName?.[0] || u.username?.[0] || "U").toUpperCase() +

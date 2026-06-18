@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { User, Mail, Loader2, Sparkles, Hash, Phone, FileText } from "lucide-react";
+import {
+  User,
+  Mail,
+  Loader2,
+  Sparkles,
+  Hash,
+  Phone,
+} from "lucide-react";
 import { Guest } from "@/core/guest/interfaces";
 import { Status } from "@/core/shared";
 import { useUpdateGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
@@ -38,29 +45,26 @@ export function EditGuestDialog({
 }: EditGuestDialogProps) {
   const updateMutation = useUpdateGuestMutation();
 
-  const [nombre, setNombre] = useState("");
-  const [apellido, setApellido] = useState("");
-  const [email, setEmail] = useState("");
-  const [tipoDocumento, setTipoDocumento] = useState("");
-  const [documento, setDocumento] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [status, setStatus] = useState<Status>("ACTIVE");
-
-  useEffect(() => {
-    if (guest) {
-      setNombre(guest.nombre);
-      setApellido(guest.apellido);
-      setEmail(guest.email);
-      setTipoDocumento(guest.tipo_documento);
-      setDocumento(guest.documento);
-      setTelefono(guest.telefono || "");
-      setStatus(guest.status || "ACTIVE");
-    }
-  }, [guest, open]);
+  const [nombre, setNombre] = useState(guest?.nombre || "");
+  const [apellido, setApellido] = useState(guest?.apellido || "");
+  const [email, setEmail] = useState(guest?.email || "");
+  const [tipoDocumento, setTipoDocumento] = useState(
+    guest?.tipo_documento || "",
+  );
+  const [documento, setDocumento] = useState(guest?.documento || "");
+  const [telefono, setTelefono] = useState(guest?.telefono || "");
+  const [status, setStatus] = useState<Status>(guest?.status || "ACTIVE");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guest || !nombre.trim() || !apellido.trim() || !email.trim() || !documento.trim()) return;
+    if (
+      !guest ||
+      !nombre.trim() ||
+      !apellido.trim() ||
+      !email.trim() ||
+      !documento.trim()
+    )
+      return;
 
     updateMutation.mutate(
       {
@@ -80,12 +84,12 @@ export function EditGuestDialog({
           });
           onOpenChange(false);
         },
-        onError: (error: any) => {
+        onError: (error) => {
           toast.error("Error al actualizar", {
             description: error.message || "Ocurrió un problema en el servidor.",
           });
         },
-      }
+      },
     );
   };
 
@@ -166,13 +170,22 @@ export function EditGuestDialog({
                   <SelectValue placeholder="Tipo" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-zinc-100 rounded-xl shadow-xl">
-                  <SelectItem value="DNI" className="font-semibold text-xs py-2.5">
+                  <SelectItem
+                    value="DNI"
+                    className="font-semibold text-xs py-2.5"
+                  >
                     DNI
                   </SelectItem>
-                  <SelectItem value="Pasaporte" className="font-semibold text-xs py-2.5">
+                  <SelectItem
+                    value="Pasaporte"
+                    className="font-semibold text-xs py-2.5"
+                  >
                     Pasaporte
                   </SelectItem>
-                  <SelectItem value="CE" className="font-semibold text-xs py-2.5">
+                  <SelectItem
+                    value="CE"
+                    className="font-semibold text-xs py-2.5"
+                  >
                     C. Extranjería
                   </SelectItem>
                 </SelectContent>
@@ -216,15 +229,26 @@ export function EditGuestDialog({
               <Label className="text-[11px] font-black uppercase text-dark-secondary tracking-widest ml-1">
                 Estado del Perfil
               </Label>
-              <Select value={status} onValueChange={(val: Status) => setStatus(val)}>
-                <SelectTrigger className={`h-12 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white focus:ring-4 focus:ring-brand-blue/5 transition-all font-bold text-xs ${status === 'ACTIVE' ? 'text-brand-blue' : 'text-zinc-500'}`}>
+              <Select
+                value={status}
+                onValueChange={(val: Status) => setStatus(val)}
+              >
+                <SelectTrigger
+                  className={`h-12 rounded-2xl bg-zinc-50 border-zinc-100 focus:bg-white focus:ring-4 focus:ring-brand-blue/5 transition-all font-bold text-xs ${status === "ACTIVE" ? "text-brand-blue" : "text-zinc-500"}`}
+                >
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-zinc-100 rounded-xl shadow-xl">
-                  <SelectItem value="ACTIVE" className="font-bold text-xs py-2.5 text-brand-blue">
+                  <SelectItem
+                    value="ACTIVE"
+                    className="font-bold text-xs py-2.5 text-brand-blue"
+                  >
                     ACTIVO
                   </SelectItem>
-                  <SelectItem value="INACTIVE" className="font-bold text-xs py-2.5 text-zinc-500">
+                  <SelectItem
+                    value="INACTIVE"
+                    className="font-bold text-xs py-2.5 text-zinc-500"
+                  >
                     INACTIVO
                   </SelectItem>
                 </SelectContent>

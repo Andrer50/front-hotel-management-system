@@ -2,17 +2,12 @@
 
 import { useState, useMemo } from "react";
 import {
-  Plus,
   Search,
-  Filter,
   Calendar,
   Download,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
   Clock,
   UserPlus2,
-  ExternalLink,
   Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -30,7 +24,6 @@ import { toast } from "sonner";
 import { CreateGuestDialog } from "@/presentation/dashboard/admin/clients/create-guest-dialog";
 import { EditGuestDialog } from "@/presentation/dashboard/admin/clients/edit-guest-dialog";
 import { useGetGuestsQuery } from "@/modules/guest/domain/hooks/useGuestQueries";
-import { useDeleteGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 import { Loader2 } from "lucide-react";
 import { Guest, GuestUI } from "@/core/guest/interfaces";
 import { Status } from "@/core/shared";
@@ -39,7 +32,6 @@ const ITEMS_PER_PAGE = 8;
 
 export default function ReceptionGuestsPage() {
   const { data: guestsData = [], isLoading } = useGetGuestsQuery();
-  const deleteGuestMutation = useDeleteGuestMutation();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "ALL">("ALL");
@@ -330,8 +322,12 @@ export default function ReceptionGuestsPage() {
                     {/* Celda: Documento */}
                     <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary">
                       <div className="flex flex-col">
-                        <span className="font-bold text-dark-primary">{guest.document}</span>
-                        <span className="text-[10px] opacity-70">{guest.documentType}</span>
+                        <span className="font-bold text-dark-primary">
+                          {guest.document}
+                        </span>
+                        <span className="text-[10px] opacity-70">
+                          {guest.documentType}
+                        </span>
                       </div>
                     </td>
 
@@ -364,7 +360,6 @@ export default function ReceptionGuestsPage() {
                         >
                           <Pencil />
                         </button>
-                        
                       </div>
                     </td>
                   </tr>
@@ -386,37 +381,52 @@ export default function ReceptionGuestsPage() {
         {/* Paginación de Tabla */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-zinc-100/60 text-xs text-dark-secondary select-none">
           <span>
-            Mostrando {paginatedGuests.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-
-            {(currentPage - 1) * ITEMS_PER_PAGE + paginatedGuests.length} de{" "}
+            Mostrando{" "}
+            {paginatedGuests.length > 0
+              ? (currentPage - 1) * ITEMS_PER_PAGE + 1
+              : 0}
+            -{(currentPage - 1) * ITEMS_PER_PAGE + paginatedGuests.length} de{" "}
             {filteredGuests.length} resultados
           </span>
 
           <Pagination className="mx-0 w-auto">
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                   text="Anterior"
                 />
               </PaginationItem>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(page)}
-                    isActive={currentPage === page}
-                    className="cursor-pointer h-8 w-8 rounded-lg"
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer h-8 w-8 rounded-lg"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ),
+              )}
 
               <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                   text="Siguiente"
                 />
               </PaginationItem>
@@ -477,12 +487,10 @@ export default function ReceptionGuestsPage() {
         </div>
       </div>
 
-      <CreateGuestDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-      />
+      <CreateGuestDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
 
       <EditGuestDialog
+        key={selectedGuest ? `edit-${selectedGuest.id}-${isEditOpen}` : "none"}
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
         guest={selectedGuest}

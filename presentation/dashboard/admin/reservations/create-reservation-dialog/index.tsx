@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +30,12 @@ import {
   X,
   Plus,
 } from "lucide-react";
-import { useSession } from "next-auth/react"; // ← Inyectamos useSession de NextAuth
 import { SelectGuest } from "@/core/guest/interfaces";
 import { useCreateGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 import { useGetGuestSelectDataQuery } from "@/modules/guest/domain/hooks/useGuestQueries";
 import { useGetAvailableRoomsQuery } from "@/modules/room/domain/hooks/useRoomQueries";
 import { useCreateReservationMutation } from "@/modules/reservation/domain/hooks/useReservationMutations";
+import { useGetTemporadasQuery } from "@/modules/temporada/domain/hooks/useTemporadaQueries";
 
 interface CreateReservationDialogProps {
   isOpen: boolean;
@@ -48,7 +48,6 @@ export function CreateReservationDialog({
   onOpenChange,
   onReservationCreated,
 }: CreateReservationDialogProps) {
-  const { data: session }: any = useSession(); // ← Capturamos la sesión interna activa
   const createGuestMutation = useCreateGuestMutation();
   const createReservationMutation = useCreateReservationMutation();
 
@@ -87,70 +86,60 @@ export function CreateReservationDialog({
   }, [huespedes, guestSearch]);
 
   // ========== LOGICA INTERNA: CÁLCULO DE TARIFA TOTALMENTE DINÁMICA POR % ==========
-  const calcularTarifaPorTemporada = async (fechaEntrada: string, habitacionId: string) => {
+  const { data: temporadas = [] } = useGetTemporadasQuery();
+
+  const calcularTarifaPorTemporada = (
+    fechaEntrada: string,
+    habitacionId: string,
+  ) => {
     if (!fechaEntrada || !habitacionId) return;
 
-    // Buscamos la habitación seleccionada en la lista para sacar su precio_base real
-    const habitacionSeleccionada = habitaciones.find((h) => h.id.toString() === habitacionId);
+    const habitacionSeleccionada = habitaciones.find(
+      (h) => h.id.toString() === habitacionId,
+    );
     if (!habitacionSeleccionada) return;
 
     const precioBase = parseFloat(habitacionSeleccionada.precio_base) || 0;
-    const token = session?.accessToken || session?.user?.token || session?.token;
+    const fechaTarget = new Date(fechaEntrada + "T00:00:00");
 
-    try {
-      const response = await fetch("http://localhost:8000/api/hotel/temporadas", {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const resData = await response.json();
+    const temporadaChoca = temporadas.find((temp) => {
+      const inicio = new Date(temp.fecha_inicio + "T00:00:00");
+      const fin = new Date(temp.fecha_fin + "T00:00:00");
+      return fechaTarget >= inicio && fechaTarget <= fin;
+    });
 
-      if (response.ok && resData.status === "success") {
-        const listaTemporadas = resData.data || [];
-        
-        // Convertimos la fecha de entrada digitada para compararla
-        const fechaTarget = new Date(fechaEntrada + "T00:00:00");
+    if (temporadaChoca) {
+      const porcentaje =
+        temporadaChoca.porcentaje !== undefined ? temporadaChoca.porcentaje : 0;
+      const factor = 1 + porcentaje / 100;
+      const tarifaCalculada = precioBase * factor;
 
-        // Verificamos si cae en el rango de alguna temporada activa
-        const temporadaChoca = listaTemporadas.find((temp: any) => {
-          const inicio = new Date(temp.fecha_inicio + "T00:00:00");
-          const fin = new Date(temp.fecha_fin + "T00:00:00");
-          return fechaTarget >= inicio && fechaTarget <= fin;
-        });
+      setFormData((prev) => ({
+        ...prev,
+        tarifa_aplicada: tarifaCalculada.toFixed(2),
+      }));
 
-        if (temporadaChoca) {
-          // 🔥 LEEMOS EL PORCENTAJE REAL DE LA BASE DE DATOS. Si es undefined (old schemas), default a 0.
-          const porcentaje = temporadaChoca.porcentaje !== undefined ? temporadaChoca.porcentaje : 0;
-
-          // Operación matemática pura y limpia
-          const factor = 1 + (porcentaje / 100); // Ej: 30 -> 1.30 | -50 -> 0.50
-          const tarifaCalculada = precioBase * factor;
-
-          setFormData((prev) => ({ ...prev, tarifa_aplicada: tarifaCalculada.toFixed(2) }));
-
-          // Construimos el mensaje ideal para el recepcionista según el signo del porcentaje
-          if (porcentaje > 0) {
-            setMensajeTemporada(`📈 Tarifa Especial: ${temporadaChoca.nombre} (+${porcentaje}%)`);
-          } else if (porcentaje < 0) {
-            setMensajeTemporada(`📉 Descuento Aplicado: ${temporadaChoca.nombre} (${porcentaje}%)`);
-          } else {
-            setMensajeTemporada(`✨ Campaña activa: ${temporadaChoca.nombre} (Precio Base)`);
-          }
-        } else {
-          // Sin temporada: Tarifa normal de la habitación
-          setFormData((prev) => ({ ...prev, tarifa_aplicada: precioBase.toFixed(2) }));
-          setMensajeTemporada("");
-        }
+      if (porcentaje > 0) {
+        setMensajeTemporada(
+          `📈 Tarifa Especial: ${temporadaChoca.nombre} (+${porcentaje}%)`,
+        );
+      } else if (porcentaje < 0) {
+        setMensajeTemporada(
+          `📉 Descuento Aplicado: ${temporadaChoca.nombre} (${porcentaje}%)`,
+        );
+      } else {
+        setMensajeTemporada(
+          `✨ Campaña activa: ${temporadaChoca.nombre} (Precio Base)`,
+        );
       }
-    } catch (error) {
-      console.error("Error cruzando tarifas con temporadas", error);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        tarifa_aplicada: precioBase.toFixed(2),
+      }));
+      setMensajeTemporada("");
     }
   };
-
-  // Escucha cambios en la fecha de entrada o en la habitación para recalcular al instante
-  useEffect(() => {
-    if (formData.fecha_entrada && formData.habitacion) {
-      calcularTarifaPorTemporada(formData.fecha_entrada, formData.habitacion);
-    }
-  }, [formData.fecha_entrada, formData.habitacion, habitaciones]);
 
   const handleSelectGuest = (guest: SelectGuest) => {
     setSelectedGuest(guest);
@@ -190,6 +179,9 @@ export function CreateReservationDialog({
             documento: createdGuest.documento,
           };
           handleSelectGuest(newGuest);
+        },
+        onError: (error) => {
+          toast.error(error.message || "Error al crear el huésped");
         },
       },
     );
@@ -340,7 +332,8 @@ export function CreateReservationDialog({
                                   ) : (
                                     <Plus className="h-3 w-3" />
                                   )}
-                                  Registrar Huésped Temporal (DNI: {guestSearch})
+                                  Registrar Huésped Temporal (DNI: {guestSearch}
+                                  )
                                 </Button>
                               )}
                             </div>
@@ -358,9 +351,10 @@ export function CreateReservationDialog({
                 </Label>
                 <Select
                   value={formData.habitacion}
-                  onValueChange={(val) =>
-                    setFormData({ ...formData, habitacion: val })
-                  }
+                  onValueChange={(val) => {
+                    setFormData({ ...formData, habitacion: val });
+                    calcularTarifaPorTemporada(formData.fecha_entrada, val);
+                  }}
                 >
                   <SelectTrigger className="h-10 text-xs rounded-xl">
                     <SelectValue placeholder="Seleccione una habitación" />
@@ -383,12 +377,14 @@ export function CreateReservationDialog({
                   <Input
                     type="date"
                     value={formData.fecha_entrada}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const val = e.target.value;
                       setFormData({
                         ...formData,
-                        fecha_entrada: e.target.value,
-                      })
-                    }
+                        fecha_entrada: val,
+                      });
+                      calcularTarifaPorTemporada(val, formData.habitacion);
+                    }}
                     className="h-10 text-xs rounded-xl"
                   />
                 </div>
