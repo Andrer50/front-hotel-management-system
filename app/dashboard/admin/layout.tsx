@@ -4,6 +4,7 @@ import { AdminSidebar } from "@/components/admin-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { DashboardNavbar } from "@/presentation/dashboard/navbar";
 import { PermissionGuard } from "@/components/shared/permission-guard";
+import { ChatbotWidget } from "@/presentation/shared/chatbot-widget";
 
 export default function AdminDashboardLayout({
   children,
@@ -33,6 +34,9 @@ export default function AdminDashboardLayout({
         </SidebarInset>
 
       </div>
+
+      <ChatbotWidget />
+
     </SidebarProvider>
   );
 }
