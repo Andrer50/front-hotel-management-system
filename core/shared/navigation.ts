@@ -14,6 +14,7 @@ import {
   Receipt,
   LucideIcon,
   TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 
 export interface NavItem {
@@ -106,5 +107,10 @@ export const navigationItems: NavItem[] = [
     href: "/dashboard/admin/statistics",
     icon: BarChart3,
     permission: "can_view_reports",
+  },
+  {
+    name: "Reseñas",
+    href: "/dashboard/admin/resenas",
+    icon: MessageSquare,
   },
 ];

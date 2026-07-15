@@ -17,6 +17,7 @@ export interface Reservation {
   noches: number;
   total: number;
   consumos_extra_total: number;
+  estadia?: number;
 }
 
 export interface CreateReservationRequest {
