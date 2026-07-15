@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getInventariosAction,
   getInventarioByIdAction,
+  getInventarioPredictivoAction,
 } from "@/core/inventory/actions/inventarioActions";
-import { Inventario, InventarioFilters } from "@/core/inventory/interfaces";
+import { Inventario, InventarioFilters, InventarioPredictivo } from "@/core/inventory/interfaces";
 
 export const useGetInventariosQuery = (filters?: InventarioFilters) => {
   return useQuery<Inventario[]>({
@@ -24,5 +25,12 @@ export const useGetInventarioByIdQuery = (id: number) => {
     queryKey: ["inventario", id],
     queryFn: () => getInventarioByIdAction(id),
     enabled: !!id,
+  });
+};
+
+export const useGetInventarioPredictivoQuery = () => {
+  return useQuery<InventarioPredictivo[]>({
+    queryKey: ["inventarios-predictivos"],
+    queryFn: () => getInventarioPredictivoAction(),
   });
 };

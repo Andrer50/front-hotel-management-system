@@ -97,6 +97,12 @@ export const navigationItems: NavItem[] = [
     permission: "can_manage_inventory",
   },
   {
+    name: "Inventario Predictivo",
+    href: "/dashboard/admin/inventory/predictivo",
+    icon: Package,
+    permission: "can_manage_inventory",
+  },
+  {
     name: "Roles",
     href: "/dashboard/admin/roles",
     icon: Shield,
