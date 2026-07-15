@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { getGuestsAction, getGuestSelectDataAction } from "@/core/guest/actions/guestActions";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getGuestsAction, getGuestSelectDataAction, obtenerRecomendacionesIAAction, PerfilHuespedPayload } from "@/core/guest/actions/guestActions";
 
 export const useGetGuestsQuery = () => {
   return useQuery({
@@ -15,3 +15,11 @@ export const useGetGuestSelectDataQuery = () => {
   });
 };
 
+export const useRecomendacionIAMutation = () => {
+  return useMutation({
+    mutationFn: (payload: PerfilHuespedPayload) => obtenerRecomendacionesIAAction(payload),
+    onSuccess: (response) => {
+      // Si usas sonner toast o similar, puedes disparar una notificación de éxito aquí
+    },
+  });
+};

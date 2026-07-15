@@ -2,7 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   createGuestAction, 
   updateGuestAction, 
-  deleteGuestAction 
+  deleteGuestAction,
+  obtenerRecomendacionesIAAction, // 🧠 Importamos la nueva acción del Core
+  PerfilHuespedPayload 
 } from "@/core/guest/actions/guestActions";
 import { CreateGuestRequest, UpdateGuestRequest, Guest } from "@/core/guest/interfaces";
 
@@ -42,6 +44,18 @@ export const useDeleteGuestMutation = () => {
     mutationFn: (id: number) => deleteGuestAction(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guests"] });
+    },
+  });
+};
+
+// ==============================================================================
+// 🚀 NUEVA MUTACIÓN: Recomendación de Servicios con Gemini
+// ==============================================================================
+export const useRecomendacionIAMutation = () => {
+  return useMutation({
+    mutationFn: (payload: PerfilHuespedPayload) => obtenerRecomendacionesIAAction(payload),
+    onSuccess: () => {
+      // Éxito al consultar Gemini
     },
   });
 };
