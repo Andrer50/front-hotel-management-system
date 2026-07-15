@@ -4,6 +4,7 @@ import {
   InventarioFilters,
   CreateInventarioRequest,
   UpdateInventarioRequest,
+  InventarioPredictivo,
 } from "../interfaces";
 
 const buildQueryString = (filters?: InventarioFilters): string => {
@@ -35,3 +36,6 @@ export const updateInventarioAction = async (
 
 export const deleteInventarioAction = async (id: number): Promise<void> =>
   apiClient.delete<void>(`hotel/inventarios/${id}`);
+
+export const getInventarioPredictivoAction = async (): Promise<InventarioPredictivo[]> =>
+  apiClient.get<InventarioPredictivo[]>("hotel/inventarios/predictivo");
