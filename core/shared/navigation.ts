@@ -13,6 +13,7 @@ import {
   Brush,
   Receipt,
   LucideIcon,
+  TrendingUp,
 } from "lucide-react";
 
 export interface NavItem {
@@ -63,6 +64,12 @@ export const navigationItems: NavItem[] = [
     href: "/dashboard/admin/temporadas",
     icon: Calendar, // Tu nuevo botón tuning
     permission: "can_manage_rooms", // Protegido con el rol de administración de cuartos
+  },
+  {
+    name: "Precios Dinámicos",
+    href: "/dashboard/admin/precios-dinamicos",
+    icon: TrendingUp,
+    permission: "can_manage_rooms",
   },
   {
     name: "Estados de Limpieza",
