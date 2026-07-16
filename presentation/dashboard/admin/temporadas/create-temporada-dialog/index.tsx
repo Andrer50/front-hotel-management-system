@@ -11,6 +11,10 @@ import {
 } from "@/modules/temporada/domain/hooks/useTemporadaMutations";
 import { Temporada } from "@/core/temporada/interfaces";
 
+// 🚀 CAMBIO CLAVE: Importamos el nuevo hook modular de mutaciones
+import { useTemporadasMutations } from "@/modules/temporadas/hooks/useTemporadasMutations";
+import { updateTemporadaAction } from "@/core/temporadas/actions/temporadasActions";
+
 interface CreateTemporadaDialogProps {
   onTemporadaCreated: () => void;
   temporadaAEditar: Temporada | null;       // ← Recibe la temporada seleccionada
@@ -97,9 +101,9 @@ export function CreateTemporadaDialog({
 
   return (
     <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs h-fit relative">
-      {/* Si estamos editando, muestra un botón chiquito para cancelar y volver a crear */}
       {temporadaAEditar && (
         <button 
+          type="button"
           onClick={limpiarFormulario}
           className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-600 p-1 rounded-full bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer"
           title="Cancelar edición"
@@ -139,7 +143,6 @@ export function CreateTemporadaDialog({
           <Input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="bg-white border-zinc-200 rounded-xl text-xs h-10" />
         </div>
 
-        {/* El botón cambia dinámicamente de color y texto si es creación o edición */}
         <Button 
           type="submit" 
           disabled={isPending} 

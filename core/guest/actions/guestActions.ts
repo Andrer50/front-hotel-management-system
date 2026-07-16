@@ -6,6 +6,15 @@ import {
   GuestSelectData,
 } from "../interfaces";
 
+// 🧠 NUEVO: Interfaz para el payload de la recomendación de IA
+export interface PerfilHuespedPayload {
+  edad: number | string;
+  motivo_viaje: string;
+  acompanantes: string;
+  preferencias_comida: string;
+  intereses: string;
+}
+
 export const getGuestsAction = async (): Promise<Guest[]> => {
   return apiClient.get<Guest[]>("hotel/huespedes");
 };
@@ -29,4 +38,10 @@ export const updateGuestAction = async (
 
 export const deleteGuestAction = async (id: number): Promise<void> => {
   return apiClient.delete<void>(`hotel/huespedes/${id}`);
+};
+
+export const obtenerRecomendacionesIAAction = async (
+  payload: PerfilHuespedPayload
+): Promise<any> => {
+  return apiClient.post<any>("hotel/ia/recomendar-servicios", payload);
 };

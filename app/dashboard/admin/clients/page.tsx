@@ -9,6 +9,7 @@ import {
   Clock,
   UserPlus2,
   Pencil,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,9 @@ import {
 import { toast } from "sonner";
 import { CreateGuestDialog } from "@/presentation/dashboard/admin/clients/create-guest-dialog";
 import { EditGuestDialog } from "@/presentation/dashboard/admin/clients/edit-guest-dialog";
+// 🟢 Rutas originales correctas apuntando al módulo de huéspedes
 import { useGetGuestsQuery } from "@/modules/guest/domain/hooks/useGuestQueries";
+import { useDeleteGuestMutation, useRecomendacionIAMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 import { Loader2 } from "lucide-react";
 import { Guest, GuestUI } from "@/core/guest/interfaces";
 import { Status } from "@/core/shared";
@@ -32,7 +35,9 @@ const ITEMS_PER_PAGE = 8;
 
 export default function ReceptionGuestsPage() {
   const { data: guestsData = [], isLoading } = useGetGuestsQuery();
-
+  const deleteGuestMutation = useDeleteGuestMutation();
+  const { mutateAsync: generarRecomendaciones, isPending: isIaLoading } = useRecomendacionIAMutation();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "ALL">("ALL");
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,9 +45,42 @@ export default function ReceptionGuestsPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
 
+  // 🧠 Estados para el Conserje Virtual Interactivo
+  const [activeGuestForIa, setActiveGuestForIa] = useState<GuestUI | null>(null);
+  const [iaResponse, setIaResponse] = useState<any | null>(null);
+
+  // 🚀 DISPARADOR DE RECOMENDACIONES CON GEMINI IA (¡Totalmente corregido y tolerante!)
+  const handleConsultarIA = async (guest: GuestUI) => {
+    setActiveGuestForIa(guest);
+    setIaResponse(null); // Reseteamos la UI
+
+    const payload = {
+      edad: 32,
+      motivo_viaje: "Vacaciones",
+      acompanantes: "Pareja",
+      preferencias_comida: "Ninguna",
+      intereses: "Relajación, piscina y gastronomía",
+    };
+
+    try {
+      const response = await generarRecomendaciones(payload);
+      console.log("Respuesta de la IA:", response);
+
+      if (response) {
+        // Guardamos la respuesta directamente. Si viene envuelta en .data la extraemos, si no, usamos el response entero.
+        const dataFinal = response.data ? response.data : response;
+        setIaResponse(dataFinal);
+      } else {
+        toast.error("No se pudo obtener el análisis");
+      }
+    } catch (error) {
+      console.error("Error en la petición:", error);
+      toast.error("Error al procesar la sugerencia con el servidor");
+    }
+  };
+
   // Mapeo y Filtro de huéspedes interactivo
   const filteredGuests = useMemo(() => {
-    // Mapeamos los datos del backend a la interfaz del frontend
     const mappedGuests: GuestUI[] = guestsData.map((g) => ({
       id: g.id.toString(),
       name: `${g.nombre} ${g.apellido}`,
@@ -50,8 +88,8 @@ export default function ReceptionGuestsPage() {
       document: g.documento,
       documentType: g.tipo_documento,
       phone: g.telefono || "N/A",
-      lastCheckIn: "N/A", // El backend aún no provee esto en el modelo Huesped
-      totalStays: 0, // El backend aún no provee esto
+      lastCheckIn: "N/A",
+      totalStays: 0,
       status: g.status || "ACTIVE",
       avatarBg: "bg-blue-100 text-blue-600",
       initials: `${g.nombre[0]}${g.apellido[0]}`.toUpperCase(),
@@ -84,20 +122,18 @@ export default function ReceptionGuestsPage() {
     const activeCheckIns = filteredGuests.filter(
       (g) => g.status === "ACTIVE",
     ).length;
-    // Tasa lealtad simulada: huéspedes con más de 4 estancias
     const loyalCount = filteredGuests.filter((g) => g.totalStays >= 5).length;
     const loyaltyRate =
       total > 0 ? ((loyalCount / total) * 100).toFixed(1) : "0.0";
 
-    // Estancia promedio calculada dinámicamente
     const avgStay =
       total > 0
         ? (
-            filteredGuests.reduce((acc, curr) => acc + curr.totalStays, 0) /
-              total /
-              3 +
-            2.5
-          ).toFixed(1)
+          filteredGuests.reduce((acc, curr) => acc + curr.totalStays, 0) /
+          total /
+          3 +
+          2.5
+        ).toFixed(1)
         : "0.0";
 
     return { total, activeCheckIns, loyaltyRate, avgStay };
@@ -105,11 +141,6 @@ export default function ReceptionGuestsPage() {
 
   const handleCreateGuest = () => {
     setIsCreateOpen(true);
-  };
-
-  const handleAddGuest = () => {
-    // La mutación se encarga de invalidar y refrescar
-    setIsCreateOpen(false);
   };
 
   const handleEditGuest = (guest: Guest) => {
@@ -120,13 +151,6 @@ export default function ReceptionGuestsPage() {
   const handleExportData = () => {
     toast.info("Exportación en curso", {
       description: "Generando archivo CSV del listado de huéspedes...",
-    });
-  };
-
-  const handleViewDetails = (name: string) => {
-    toast(`Ficha de Huésped: ${name}`, {
-      description:
-        "Cargando historial de reservas, preferencias dietéticas e historial de consumos de bar.",
     });
   };
 
@@ -173,9 +197,8 @@ export default function ReceptionGuestsPage() {
         </div>
       </div>
 
-      {/* Grid de KPI Cards de 4 Columnas */}
+      {/* Grid de KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* KPI 1 */}
         <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
           <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
             Total Huéspedes
@@ -185,7 +208,6 @@ export default function ReceptionGuestsPage() {
           </span>
         </div>
 
-        {/* KPI 2 */}
         <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
           <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
             Check-ins Activos
@@ -195,7 +217,6 @@ export default function ReceptionGuestsPage() {
           </span>
         </div>
 
-        {/* KPI 3 */}
         <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
           <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
             Tasa de Lealtad
@@ -205,7 +226,6 @@ export default function ReceptionGuestsPage() {
           </span>
         </div>
 
-        {/* KPI 4 */}
         <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
           <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
             Estancia Promedio
@@ -224,7 +244,6 @@ export default function ReceptionGuestsPage() {
       {/* Barra de Filtros y Búsqueda */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 min-w-0">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 flex-1 min-w-0">
-          {/* Búsqueda */}
           <div className="relative flex-1 max-w-sm min-w-0">
             <Search className="h-3.5 w-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-secondary/60" />
             <Input
@@ -236,7 +255,6 @@ export default function ReceptionGuestsPage() {
             />
           </div>
 
-          {/* Filtro de Estado */}
           <div className="flex bg-zinc-50 p-1 rounded-xl w-fit">
             {(["ALL", "ACTIVE", "INACTIVE"] as const).map((status) => {
               const isActive = statusFilter === status;
@@ -244,11 +262,10 @@ export default function ReceptionGuestsPage() {
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status)}
-                  className={`text-[11px] font-bold px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
-                    isActive
+                  className={`text-[11px] font-bold px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${isActive
                       ? "bg-white text-brand-blue shadow-xs"
                       : "text-dark-secondary hover:text-dark-primary hover:bg-zinc-100/30"
-                  }`}
+                    }`}
                 >
                   {status === "ALL" ? "Todos los Estados" : status}
                 </button>
@@ -257,7 +274,6 @@ export default function ReceptionGuestsPage() {
           </div>
         </div>
 
-        {/* Fecha y Descargas */}
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
@@ -298,9 +314,8 @@ export default function ReceptionGuestsPage() {
                 paginatedGuests.map((guest) => (
                   <tr
                     key={guest.id}
-                    className="border-b border-zinc-50 hover:bg-zinc-50/40 transition-colors last:border-0"
+                    className="border-b border-zinc-55 hover:bg-zinc-50/40 transition-colors last:border-0"
                   >
-                    {/* Celda: Nombre */}
                     <td className="py-4.5 pr-4">
                       <div className="flex items-center gap-3">
                         <div
@@ -314,12 +329,10 @@ export default function ReceptionGuestsPage() {
                       </div>
                     </td>
 
-                    {/* Celda: Email */}
                     <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary">
                       {guest.email}
                     </td>
 
-                    {/* Celda: Documento */}
                     <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary">
                       <div className="flex flex-col">
                         <span className="font-bold text-dark-primary">
@@ -331,12 +344,10 @@ export default function ReceptionGuestsPage() {
                       </div>
                     </td>
 
-                    {/* Celda: Teléfono */}
                     <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary italic">
                       {guest.phone}
                     </td>
 
-                    {/* Celda: Estado */}
                     <td className="py-4.5 pr-4">
                       {guest.status === "ACTIVE" ? (
                         <span className="inline-flex items-center gap-1 bg-brand-blue/5 text-brand-blue text-[10px] font-extrabold px-3 py-1 rounded-full border border-brand-blue/10">
@@ -351,14 +362,27 @@ export default function ReceptionGuestsPage() {
                       )}
                     </td>
 
-                    {/* Celda: Acciones (Stack Vertical "Ver" y "Perfil") */}
+                    {/* Acciones de Fila actualizadas */}
                     <td className="py-4.5 text-right text-xs">
-                      <div className="flex flex-col items-end gap-1.5 pl-4">
+                      <div className="flex items-center justify-end gap-3 pl-4">
+                        {/* Botón de Conserje IA */}
+                        <button
+                          onClick={() => handleConsultarIA(guest)}
+                          title="Consultar Conserje IA"
+                          className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1 ${activeGuestForIa?.id === guest.id
+                              ? "bg-indigo-50 border-indigo-200 text-indigo-600"
+                              : "bg-zinc-50 hover:bg-indigo-50 border-zinc-150 hover:border-indigo-100 text-zinc-500 hover:text-indigo-600"
+                            }`}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span className="text-[10px] font-extrabold">IA</span>
+                        </button>
+
                         <button
                           onClick={() => handleEditGuest(guest.domainData)}
-                          className="text-brand-blue hover:text-blue-700 font-bold hover:underline transition-colors cursor-pointer"
+                          className="p-2 bg-zinc-50 border border-zinc-150 hover:bg-zinc-100 text-zinc-600 rounded-xl transition-all cursor-pointer"
                         >
-                          <Pencil />
+                          <Pencil className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </td>
@@ -437,22 +461,75 @@ export default function ReceptionGuestsPage() {
 
       {/* Grid de Reportes de Inteligencia y Actividad Reciente */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Card 1: Perspectivas de Inteligencia */}
-        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-4">
-          <div className="flex items-center gap-2.5 text-brand-blue font-bold text-xs tracking-wider uppercase">
-            <div className="bg-brand-blue/10 p-2 rounded-xl text-brand-blue">
-              <Sparkles className="h-4.5 w-4.5" />
+        {/* 🧠 Card 1 Dinámica: Conserje Virtual Gemini 3.1 */}
+        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-4 min-h-[250px]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5 text-indigo-600 font-bold text-xs tracking-wider uppercase">
+              <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
+                <Sparkles className="h-4.5 w-4.5" />
+              </div>
+              Conserje Virtual Inteligente
             </div>
-            Perspectivas de Inteligencia
+            {activeGuestForIa && (
+              <span className="text-[10px] bg-zinc-100 text-zinc-600 font-extrabold px-2 py-1 rounded-lg">
+                Seleccionado: {activeGuestForIa.name}
+              </span>
+            )}
           </div>
-          <p className="text-dark-primary text-xs leading-relaxed font-medium">
-            La IA sugiere contactar a{" "}
-            <span className="text-brand-blue font-bold cursor-pointer hover:underline">
-              Alex Thompson
-            </span>{" "}
-            para actualizar su programa de lealtad. Ha superado las 15 estancias
-            este trimestre.
-          </p>
+
+          {isIaLoading ? (
+            <div className="flex flex-col items-center justify-center flex-1 gap-2 py-4">
+              <Loader2 className="h-6 w-6 text-indigo-600 animate-spin" />
+              <p className="text-[11px] text-zinc-500 font-bold tracking-wide animate-pulse">
+                Gemini procesando perfil de consumo...
+              </p>
+            </div>
+          ) : iaResponse ? (
+            <div className="flex flex-col gap-4 animate-fade-in flex-1">
+              <div>
+                <p className="text-dark-primary text-xs font-semibold bg-zinc-50 p-3 rounded-xl border border-zinc-100 leading-relaxed">
+                  "{iaResponse.analisis_perfil}"
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-extrabold tracking-wider text-zinc-400 uppercase">
+                  Servicios Sugeridos
+                </span>
+                <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto pr-1">
+                  {iaResponse.servicios_recomendados?.map((serv: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="bg-white border border-zinc-100 p-3 rounded-xl flex items-start justify-between gap-4 shadow-xs"
+                    >
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs font-extrabold text-dark-primary flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                          {serv.nombre_servicio}
+                        </span>
+                        <span className="text-[11px] text-dark-secondary font-medium leading-relaxed">
+                          {serv.justificacion}
+                        </span>
+                      </div>
+                      {serv.descuento_sugerido > 0 && (
+                        <span className="bg-emerald-50 text-emerald-600 text-[10px] font-extrabold px-2 py-0.5 rounded-lg flex-shrink-0">
+                          -{serv.descuento_sugerido}%
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center flex-1 text-center py-6">
+              <Sparkles className="h-8 w-8 text-indigo-300/60 mb-2 animate-bounce" />
+              <h5 className="text-xs font-bold text-dark-primary mb-1">Sin Huésped Seleccionado</h5>
+              <p className="text-[11px] text-dark-secondary max-w-[280px] leading-relaxed">
+                Haz clic en el botón de <span className="font-extrabold text-indigo-600">IA</span> en cualquier fila de la tabla para recibir ofertas personalizadas.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Card 2: Actividad Reciente */}
