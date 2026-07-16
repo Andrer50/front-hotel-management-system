@@ -2,7 +2,7 @@
 
 import { useSessionContext } from "@/context/session-context";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Search, Bell, Settings, User } from "lucide-react";
+import { Search, Settings, User } from "lucide-react";
 
 export const DashboardNavbar = () => {
   const { session } = useSessionContext();

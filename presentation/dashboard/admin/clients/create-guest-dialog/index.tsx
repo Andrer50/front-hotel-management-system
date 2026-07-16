@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
@@ -20,15 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import {
-  UserPlus2,
-  Mail,
-  Hash,
-  UserCheck,
-  Phone,
-  FileText,
-  Loader2,
-} from "lucide-react";
+import { UserPlus2, Loader2 } from "lucide-react";
 import { useCreateGuestMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
 
 interface CreateGuestDialogProps {

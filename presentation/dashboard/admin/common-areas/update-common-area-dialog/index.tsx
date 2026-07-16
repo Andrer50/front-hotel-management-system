@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -54,12 +53,16 @@ export const UpdateCommonAreaDialog = ({
   const { mutate: updateArea, isPending } = useUpdateCommonAreaMutation();
 
   const [nombre, setNombre] = useState(area?.nombre || "");
-  const [capacidadMaxima, setCapacidadMaxima] = useState<number>(area?.capacidad_maxima || 0);
+  const [capacidadMaxima, setCapacidadMaxima] = useState<number>(
+    area?.capacidad_maxima || 0,
+  );
   const [categoria, setCategoria] = useState(area?.categoria || "Interiores");
   const [descripcion, setDescripcion] = useState(area?.descripcion || "");
-  const [estado, setEstado] = useState<CommonAreaEstado>(area?.estado || "DISPONIBLE");
+  const [estado, setEstado] = useState<CommonAreaEstado>(
+    area?.estado || "DISPONIBLE",
+  );
   const [isActive, setIsActive] = useState<boolean>(area?.is_active ?? true);
-  
+
   const [imagen, setImagen] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -88,10 +91,12 @@ export const UpdateCommonAreaDialog = ({
           },
           onError: (error) => {
             // Revertir estado visual en caso de error
-            setEstado(area.estado); 
-            toast.error(error.message || "Ocurrió un error al actualizar el estado");
-          }
-        }
+            setEstado(area.estado);
+            toast.error(
+              error.message || "Ocurrió un error al actualizar el estado",
+            );
+          },
+        },
       );
     }
   };
@@ -113,9 +118,11 @@ export const UpdateCommonAreaDialog = ({
         onError: (error) => {
           // Revertir el estado local si falla
           setIsActive(!newValue);
-          toast.error(error.message || "No se pudo cambiar el estado de activación.");
+          toast.error(
+            error.message || "No se pudo cambiar el estado de activación.",
+          );
         },
-      }
+      },
     );
   };
 
@@ -140,9 +147,11 @@ export const UpdateCommonAreaDialog = ({
           onOpenChange(false);
         },
         onError: (error) => {
-          toast.error(error.message || "Ocurrió un error al guardar los cambios");
-        }
-      }
+          toast.error(
+            error.message || "Ocurrió un error al guardar los cambios",
+          );
+        },
+      },
     );
   };
 
@@ -151,7 +160,6 @@ export const UpdateCommonAreaDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[850px] bg-white rounded-3xl border-none shadow-2xl p-0 overflow-hidden isolate">
-        
         {/* Cabecera Premium con Selector de Estado Rápido */}
         <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 p-8 pb-6 text-white relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-12 -translate-y-6 opacity-5">
@@ -179,11 +187,36 @@ export const UpdateCommonAreaDialog = ({
             <div className="flex flex-wrap gap-2 pt-2 border-t border-white/10">
               {(
                 [
-                  { id: "DISPONIBLE", label: "DISPONIBLE", color: "bg-emerald-500", icon: CheckCircle2 },
-                  { id: "OCUPADA", label: "OCUPADA", color: "bg-zinc-500", icon: Clock },
-                  { id: "SUCIA", label: "SUCIA", color: "bg-amber-500", icon: Brush },
-                  { id: "MANTENIMIENTO", label: "MTTO.", color: "bg-red-500", icon: AlertTriangle },
-                  { id: "RESTRINGIDO", label: "RESTRINGIDO", color: "bg-slate-500", icon: Lock },
+                  {
+                    id: "DISPONIBLE",
+                    label: "DISPONIBLE",
+                    color: "bg-emerald-500",
+                    icon: CheckCircle2,
+                  },
+                  {
+                    id: "OCUPADA",
+                    label: "OCUPADA",
+                    color: "bg-zinc-500",
+                    icon: Clock,
+                  },
+                  {
+                    id: "SUCIA",
+                    label: "SUCIA",
+                    color: "bg-amber-500",
+                    icon: Brush,
+                  },
+                  {
+                    id: "MANTENIMIENTO",
+                    label: "MTTO.",
+                    color: "bg-red-500",
+                    icon: AlertTriangle,
+                  },
+                  {
+                    id: "RESTRINGIDO",
+                    label: "RESTRINGIDO",
+                    color: "bg-slate-500",
+                    icon: Lock,
+                  },
                 ] as const
               ).map((statusOpt) => {
                 const isSelected = estado === statusOpt.id;
@@ -198,8 +231,12 @@ export const UpdateCommonAreaDialog = ({
                         : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
                     }`}
                   >
-                    <Icon className={`h-3.5 w-3.5 ${isSelected ? "animate-pulse" : ""}`} />
-                    <span className="text-[10px] font-black">{statusOpt.label}</span>
+                    <Icon
+                      className={`h-3.5 w-3.5 ${isSelected ? "animate-pulse" : ""}`}
+                    />
+                    <span className="text-[10px] font-black">
+                      {statusOpt.label}
+                    </span>
                   </button>
                 );
               })}
@@ -264,11 +301,17 @@ export const UpdateCommonAreaDialog = ({
               </div>
 
               {/* Toggle de Activación de Área */}
-              <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 mt-2 ${
-                isActive ? "bg-emerald-50 border-emerald-200" : "bg-zinc-100 border-zinc-200"
-              }`}>
+              <div
+                className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 mt-2 ${
+                  isActive
+                    ? "bg-emerald-50 border-emerald-200"
+                    : "bg-zinc-100 border-zinc-200"
+                }`}
+              >
                 <div className="flex flex-col gap-0.5">
-                  <span className={`text-xs font-extrabold ${isActive ? "text-emerald-700" : "text-zinc-500"}`}>
+                  <span
+                    className={`text-xs font-extrabold ${isActive ? "text-emerald-700" : "text-zinc-500"}`}
+                  >
                     {isActive ? "Área Activa" : "Área Desactivada"}
                   </span>
                   <span className="text-[10px] text-zinc-400 font-medium">
@@ -289,9 +332,13 @@ export const UpdateCommonAreaDialog = ({
                   {isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : isActive ? (
-                    <><PowerOff className="h-3.5 w-3.5" /> Desactivar</>
+                    <>
+                      <PowerOff className="h-3.5 w-3.5" /> Desactivar
+                    </>
                   ) : (
-                    <><Power className="h-3.5 w-3.5" /> Activar</>
+                    <>
+                      <Power className="h-3.5 w-3.5" /> Activar
+                    </>
                   )}
                 </button>
               </div>

@@ -30,7 +30,7 @@ import { CreateRoomDialog } from "@/presentation/dashboard/admin/rooms/create-ro
 import { CreatePlantaDialog } from "@/presentation/dashboard/admin/rooms/create-planta-dialog";
 import { UpdateRoomDialog } from "@/presentation/dashboard/admin/rooms/update-room-dialog";
 import { Room, RoomEstado, Incidencia } from "@/core/room/interfaces";
-import { useGetIncidenciasQuery, useGetTodasIncidenciasQuery } from "@/modules/room/domain/hooks/useIncidenciaQueries";
+import { useGetTodasIncidenciasQuery } from "@/modules/room/domain/hooks/useIncidenciaQueries";
 import { useGetLimpiezasQuery } from "@/modules/room/domain/hooks/useLimpiezaQueries";
 import { AssignLimpiezaDialog } from "@/presentation/dashboard/admin/rooms/assign-limpieza-dialog/index";
 import { LimpiezaCardSection } from "@/presentation/dashboard/admin/rooms/limpieza-card-section";
@@ -40,13 +40,16 @@ import { useRouter } from "next/navigation";
 
 export default function RoomsManagementPage() {
   const router = useRouter();
-  const { data: roomsData = [], isLoading: isLoadingRooms } = useGetRoomsQuery();
-  const { data: plantas = [], isLoading: isLoadingPlantas } = useGetPlantasQuery();
+  const { data: roomsData = [], isLoading: isLoadingRooms } =
+    useGetRoomsQuery();
+  const { data: plantas = [], isLoading: isLoadingPlantas } =
+    useGetPlantasQuery();
   const { data: limpiezas = [] } = useGetLimpiezasQuery();
   const { data: incidencias = [] } = useGetTodasIncidenciasQuery();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isCreatePlantaDialogOpen, setIsCreatePlantaDialogOpen] = useState(false);
+  const [isCreatePlantaDialogOpen, setIsCreatePlantaDialogOpen] =
+    useState(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
 
@@ -54,30 +57,56 @@ export default function RoomsManagementPage() {
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [activeFilter, setActiveFilter] = useState<
+    "ALL" | "ACTIVE" | "INACTIVE"
+  >("ALL");
 
   const [isAssignLimpiezaOpen, setIsAssignLimpiezaOpen] = useState(false);
   const [roomForLimpieza, setRoomForLimpieza] = useState<Room | null>(null);
-  const [isAssignMantenimientoOpen, setIsAssignMantenimientoOpen] = useState(false);
-  const [roomForMantenimiento, setRoomForMantenimiento] = useState<Room | null>(null);
+  const [isAssignMantenimientoOpen, setIsAssignMantenimientoOpen] =
+    useState(false);
+  const [roomForMantenimiento, setRoomForMantenimiento] = useState<Room | null>(
+    null,
+  );
   const [isEditIncidenciaOpen, setIsEditIncidenciaOpen] = useState(false);
-  const [selectedIncidencia, setSelectedIncidencia] = useState<Incidencia | null>(null);
+  const [selectedIncidencia, setSelectedIncidencia] =
+    useState<Incidencia | null>(null);
 
   const filteredRooms = useMemo(() => {
     return roomsData.filter((room) => {
-      const matchesFloor = selectedFloor === "ALL" || room.planta?.toString() === selectedFloor;
-      const matchesType = typeFilter === "ALL" || room.tipo === typeFilter || room.tipo_display === typeFilter;
-      const matchesStatus = statusFilter === "ALL" || room.estado === statusFilter;
+      const matchesFloor =
+        selectedFloor === "ALL" || room.planta?.toString() === selectedFloor;
+      const matchesType =
+        typeFilter === "ALL" ||
+        room.tipo === typeFilter ||
+        room.tipo_display === typeFilter;
+      const matchesStatus =
+        statusFilter === "ALL" || room.estado === statusFilter;
       const matchesSearch =
         room.numero.includes(searchQuery) ||
-        (room.tipo_display || "").toLowerCase().includes(searchQuery.toLowerCase());
+        (room.tipo_display || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
       const matchesActive =
         activeFilter === "ALL" ||
         (activeFilter === "ACTIVE" && room.is_active) ||
         (activeFilter === "INACTIVE" && !room.is_active);
-      return matchesFloor && matchesType && matchesStatus && matchesSearch && matchesActive;
+      return (
+        matchesFloor &&
+        matchesType &&
+        matchesStatus &&
+        matchesSearch &&
+        matchesActive
+      );
     });
-  }, [roomsData, selectedFloor, typeFilter, statusFilter, searchQuery, activeFilter]);
+  }, [
+    roomsData,
+    selectedFloor,
+    typeFilter,
+    statusFilter,
+    searchQuery,
+    activeFilter,
+  ]);
 
   const stats = useMemo(() => {
     const total = roomsData.length;
@@ -91,37 +120,59 @@ export default function RoomsManagementPage() {
 
   const handleUpdateStatus = () => {
     toast.success("Estados de Habitación Sincronizados", {
-      description: "Se han actualizado las lecturas de sensores de ocupación y tarjetas IoT.",
+      description:
+        "Se han actualizado las lecturas de sensores de ocupación y tarjetas IoT.",
     });
   };
 
   const handleExportReport = () => {
     toast.info("Generando Reporte de Gobernanza", {
-      description: "Exportando planilla de limpieza para camareras en formato PDF...",
+      description:
+        "Exportando planilla de limpieza para camareras en formato PDF...",
     });
   };
 
   const getStatusStyles = (status: RoomEstado | string) => {
     switch (status) {
       case "DISPONIBLE":
-        return { badge: "bg-[#e2fbe8] text-[#00723a]", border: "#00723a", label: "Vacante" };
+        return {
+          badge: "bg-[#e2fbe8] text-[#00723a]",
+          border: "#00723a",
+          label: "Vacante",
+        };
       case "OCUPADA":
-        return { badge: "bg-zinc-100 text-zinc-600", border: "#64748b", label: "Ocupado" };
+        return {
+          badge: "bg-zinc-100 text-zinc-600",
+          border: "#64748b",
+          label: "Ocupado",
+        };
       case "LIMPIEZA":
-        return { badge: "bg-blue-50 text-brand-blue", border: "#095fe5", label: "En Limpieza" };
+        return {
+          badge: "bg-blue-50 text-brand-blue",
+          border: "#095fe5",
+          label: "En Limpieza",
+        };
       case "MANTENIMIENTO":
-        return { badge: "bg-red-50 text-red-600", border: "#ef4444", label: "Fuera de Servicio" };
+        return {
+          badge: "bg-red-50 text-red-600",
+          border: "#ef4444",
+          label: "Fuera de Servicio",
+        };
       case "SUCIA":
       default:
-        return { badge: "bg-amber-50 text-amber-600", border: "#f59e0b", label: "Sucia" };
+        return {
+          badge: "bg-amber-50 text-amber-600",
+          border: "#f59e0b",
+          label: "Sucia",
+        };
     }
   };
 
   const incidenciasActivas = incidencias.filter(
-    (i) => i.estado !== "RESUELTO" && i.estado !== "CANCELADO"
+    (i) => i.estado !== "RESUELTO" && i.estado !== "CANCELADO",
   );
   const incidenciasResueltas = incidencias.filter(
-    (i) => i.estado === "RESUELTO" || i.estado === "CANCELADO"
+    (i) => i.estado === "RESUELTO" || i.estado === "CANCELADO",
   );
 
   if (isLoadingRooms || isLoadingPlantas) {
@@ -174,19 +225,27 @@ export default function RoomsManagementPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs lg:col-span-2 flex justify-between items-center relative overflow-hidden min-h-[125px]">
           <div className="flex flex-col">
-            <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">Inventario Total</span>
+            <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
+              Inventario Total
+            </span>
             <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-4xl font-extrabold text-dark-primary tracking-tight">{stats.total}</span>
-              <span className="text-xs font-semibold text-dark-secondary">Habitaciones</span>
+              <span className="text-4xl font-extrabold text-dark-primary tracking-tight">
+                {stats.total}
+              </span>
+              <span className="text-xs font-semibold text-dark-secondary">
+                Habitaciones
+              </span>
             </div>
             <div className="flex items-center gap-6 mt-4 text-[11px] font-bold">
               <div className="flex items-center gap-2 text-dark-secondary">
                 <span className="h-2 w-2 rounded-full bg-zinc-300" />
-                OCUPADAS: <span className="text-dark-primary">{stats.ocupadas}</span>
+                OCUPADAS:{" "}
+                <span className="text-dark-primary">{stats.ocupadas}</span>
               </div>
               <div className="flex items-center gap-2 text-dark-secondary">
                 <span className="h-2 w-2 rounded-full bg-brand-blue" />
-                VACANTES: <span className="text-dark-primary">{stats.vacantes}</span>
+                VACANTES:{" "}
+                <span className="text-dark-primary">{stats.vacantes}</span>
               </div>
             </div>
           </div>
@@ -197,23 +256,35 @@ export default function RoomsManagementPage() {
 
         <div className="bg-[#e2fbe8] border border-[#cbf7d5] rounded-2xl p-6 shadow-xs flex flex-col justify-between min-h-[125px] text-[#00723a]">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-extrabold tracking-widest uppercase text-[#00723a]/80">{stats.listasPercentage}% Lista</span>
+            <span className="text-[10px] font-extrabold tracking-widest uppercase text-[#00723a]/80">
+              {stats.listasPercentage}% Lista
+            </span>
             <Check className="h-4 w-4 stroke-[2.5]" />
           </div>
           <div className="flex flex-col mt-2">
-            <span className="text-4xl font-extrabold tracking-tight">{stats.listas}</span>
-            <span className="text-[10px] font-bold uppercase mt-1 tracking-wider">Lista para Huésped</span>
+            <span className="text-4xl font-extrabold tracking-tight">
+              {stats.listas}
+            </span>
+            <span className="text-[10px] font-bold uppercase mt-1 tracking-wider">
+              Lista para Huésped
+            </span>
           </div>
         </div>
 
         <div className="bg-[#e6f0ff] border border-[#ccdfff] rounded-2xl p-6 shadow-xs flex flex-col justify-between min-h-[125px] text-brand-blue">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-extrabold tracking-widest uppercase text-brand-blue/80">% Activo</span>
+            <span className="text-[10px] font-extrabold tracking-widest uppercase text-brand-blue/80">
+              % Activo
+            </span>
             <Brush className="h-4 w-4" />
           </div>
           <div className="flex flex-col mt-2">
-            <span className="text-4xl font-extrabold tracking-tight">{stats.enLimpieza}</span>
-            <span className="text-[10px] font-bold uppercase mt-1 tracking-wider">En Limpieza</span>
+            <span className="text-4xl font-extrabold tracking-tight">
+              {stats.enLimpieza}
+            </span>
+            <span className="text-[10px] font-bold uppercase mt-1 tracking-wider">
+              En Limpieza
+            </span>
           </div>
         </div>
       </div>
@@ -226,7 +297,9 @@ export default function RoomsManagementPage() {
             className={`px-4 py-4 text-xs font-bold transition-all relative ${selectedFloor === "ALL" ? "text-blue-600" : "text-dark-secondary hover:text-dark-primary"}`}
           >
             Todas las plantas
-            {selectedFloor === "ALL" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />}
+            {selectedFloor === "ALL" && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
+            )}
           </button>
           {plantas.map((planta) => (
             <button
@@ -235,7 +308,9 @@ export default function RoomsManagementPage() {
               className={`px-4 py-4 text-xs font-bold transition-all relative ${selectedFloor === planta.id.toString() ? "text-blue-600" : "text-dark-secondary hover:text-dark-primary"}`}
             >
               {planta.nombre}
-              {selectedFloor === planta.id.toString() && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />}
+              {selectedFloor === planta.id.toString() && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
+              )}
             </button>
           ))}
           <button
@@ -249,7 +324,9 @@ export default function RoomsManagementPage() {
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 justify-between">
           <div className="flex flex-wrap items-center gap-4">
-            <span className="text-[11px] font-bold text-dark-secondary">Filtrar por:</span>
+            <span className="text-[11px] font-bold text-dark-secondary">
+              Filtrar por:
+            </span>
             <div className="w-44">
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger className="h-9 text-[11px] font-bold rounded-xl border-zinc-100 bg-zinc-50/50">
@@ -282,7 +359,12 @@ export default function RoomsManagementPage() {
               </Select>
             </div>
             <div className="w-44">
-              <Select value={activeFilter} onValueChange={(val) => setActiveFilter(val as "ALL" | "ACTIVE" | "INACTIVE")}>
+              <Select
+                value={activeFilter}
+                onValueChange={(val) =>
+                  setActiveFilter(val as "ALL" | "ACTIVE" | "INACTIVE")
+                }
+              >
                 <SelectTrigger className="h-9 text-[11px] font-bold rounded-xl border-zinc-100 bg-zinc-50/50">
                   <span className="text-dark-secondary mr-1">Activación:</span>
                   <SelectValue placeholder="Todas" />
@@ -361,8 +443,8 @@ export default function RoomsManagementPage() {
                       {!room.is_active
                         ? "INACTIVA"
                         : uiStatus === "DISPONIBLE"
-                        ? "LISTA"
-                        : uiStatus}
+                          ? "LISTA"
+                          : uiStatus}
                     </span>
                   </div>
 
@@ -374,7 +456,8 @@ export default function RoomsManagementPage() {
                       {/* Si está desactivada, reemplaza todo el contenido de estado */}
                       {!room.is_active ? (
                         <span className="flex items-center gap-1.5 text-zinc-400 font-bold">
-                          <PowerOff className="h-3 w-3 opacity-60" /> Sin servicio
+                          <PowerOff className="h-3 w-3 opacity-60" /> Sin
+                          servicio
                         </span>
                       ) : (
                         <>
@@ -391,21 +474,27 @@ export default function RoomsManagementPage() {
                           {uiStatus === "LIMPIEZA" && (
                             <div className="flex flex-col gap-1 w-full">
                               <span className="flex items-center gap-1 text-brand-blue font-bold">
-                                <Brush className="h-3 w-3 opacity-60" /> En Limpieza...
+                                <Brush className="h-3 w-3 opacity-60" /> En
+                                Limpieza...
                               </span>
                               <div className="w-full bg-zinc-100 h-1 rounded-full overflow-hidden mt-1">
-                                <div className="bg-brand-blue h-full rounded-full animate-pulse" style={{ width: "65%" }} />
+                                <div
+                                  className="bg-brand-blue h-full rounded-full animate-pulse"
+                                  style={{ width: "65%" }}
+                                />
                               </div>
                             </div>
                           )}
                           {uiStatus === "SUCIA" && (
                             <span className="flex items-center gap-1.5 text-amber-600 font-bold">
-                              <AlertTriangle className="h-3 w-3 opacity-60" /> Sucia
+                              <AlertTriangle className="h-3 w-3 opacity-60" />{" "}
+                              Sucia
                             </span>
                           )}
                           {uiStatus === "MANTENIMIENTO" && (
                             <span className="flex items-center gap-1.5 text-red-600 font-bold">
-                              <Settings2 className="h-3 w-3 opacity-60" /> Mantenimiento
+                              <Settings2 className="h-3 w-3 opacity-60" />{" "}
+                              Mantenimiento
                             </span>
                           )}
                           {uiStatus === "SUCIA" && (
@@ -435,7 +524,9 @@ export default function RoomsManagementPage() {
         {/* Alertas de Mantenimiento */}
         <div className="bg-[#111827] text-white rounded-2xl p-6 shadow-xs flex flex-col gap-4 min-h-[220px]">
           <div>
-            <h3 className="text-base font-extrabold tracking-tight">Alertas de Mantenimiento</h3>
+            <h3 className="text-base font-extrabold tracking-tight">
+              Alertas de Mantenimiento
+            </h3>
             <p className="text-[11px] font-semibold text-zinc-400 mt-0.5">
               Click en una incidencia para gestionarla.
             </p>
@@ -443,47 +534,70 @@ export default function RoomsManagementPage() {
 
           <div className="flex flex-col gap-2 overflow-y-auto max-h-[260px] pr-1">
             {incidencias.length === 0 ? (
-              <p className="text-xs text-zinc-400 text-center py-6">No hay alertas activas.</p>
+              <p className="text-xs text-zinc-400 text-center py-6">
+                No hay alertas activas.
+              </p>
             ) : (
               <>
                 {incidenciasActivas.map((inc, index) => (
                   <div
                     key={inc.id}
-                    onClick={() => { setSelectedIncidencia(inc); setIsEditIncidenciaOpen(true); }}
+                    onClick={() => {
+                      setSelectedIncidencia(inc);
+                      setIsEditIncidenciaOpen(true);
+                    }}
                     className="flex items-start gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
                   >
-                    <div className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
-                      inc.prioridad === "ALTA" ? "bg-red-600/20 text-red-500"
-                      : inc.prioridad === "MEDIA" ? "bg-amber-500/20 text-amber-500"
-                      : "bg-zinc-600/20 text-zinc-400"
-                    }`}>
+                    <div
+                      className={`h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${
+                        inc.prioridad === "ALTA"
+                          ? "bg-red-600/20 text-red-500"
+                          : inc.prioridad === "MEDIA"
+                            ? "bg-amber-500/20 text-amber-500"
+                            : "bg-zinc-600/20 text-zinc-400"
+                      }`}
+                    >
                       {index + 1}
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
                       <span className="text-xs font-bold text-white group-hover:text-zinc-200 truncate">
                         {inc.titulo}
-                        {inc.habitacion_numero && <span className="text-zinc-400 font-normal"> — Hab. {inc.habitacion_numero}</span>}
+                        {inc.habitacion_numero && (
+                          <span className="text-zinc-400 font-normal">
+                            {" "}
+                            — Hab. {inc.habitacion_numero}
+                          </span>
+                        )}
                       </span>
                       <span className="text-[10px] font-semibold text-zinc-400 mt-0.5">
-                        {inc.prioridad_display} · {inc.asignado_a_details ? `Asignado a ${inc.asignado_a_details.full_name}` : "Sin asignar"}
+                        {inc.prioridad_display} ·{" "}
+                        {inc.asignado_a_details
+                          ? `Asignado a ${inc.asignado_a_details.full_name}`
+                          : "Sin asignar"}
                       </span>
                     </div>
                     <Settings2 className="h-3.5 w-3.5 text-zinc-600 group-hover:text-zinc-400 shrink-0 mt-0.5 transition-colors" />
                   </div>
                 ))}
 
-                {incidenciasActivas.length > 0 && incidenciasResueltas.length > 0 && (
-                  <div className="flex items-center gap-2 py-1">
-                    <div className="h-px flex-1 bg-white/10" />
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Resueltas</span>
-                    <div className="h-px flex-1 bg-white/10" />
-                  </div>
-                )}
+                {incidenciasActivas.length > 0 &&
+                  incidenciasResueltas.length > 0 && (
+                    <div className="flex items-center gap-2 py-1">
+                      <div className="h-px flex-1 bg-white/10" />
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                        Resueltas
+                      </span>
+                      <div className="h-px flex-1 bg-white/10" />
+                    </div>
+                  )}
 
                 {incidenciasResueltas.map((inc) => (
                   <div
                     key={inc.id}
-                    onClick={() => { setSelectedIncidencia(inc); setIsEditIncidenciaOpen(true); }}
+                    onClick={() => {
+                      setSelectedIncidencia(inc);
+                      setIsEditIncidenciaOpen(true);
+                    }}
                     className="flex items-start gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group opacity-50"
                   >
                     <div className="h-7 w-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 bg-emerald-600/20 text-emerald-400">
@@ -492,10 +606,16 @@ export default function RoomsManagementPage() {
                     <div className="flex flex-col flex-1 min-w-0">
                       <span className="text-xs font-bold text-zinc-400 truncate line-through">
                         {inc.titulo}
-                        {inc.habitacion_numero && <span className="font-normal not-italic"> — Hab. {inc.habitacion_numero}</span>}
+                        {inc.habitacion_numero && (
+                          <span className="font-normal not-italic">
+                            {" "}
+                            — Hab. {inc.habitacion_numero}
+                          </span>
+                        )}
                       </span>
                       <span className="text-[10px] font-semibold text-zinc-500 mt-0.5">
-                        Resuelto · {inc.asignado_a_details?.full_name ?? "Sin asignar"}
+                        Resuelto ·{" "}
+                        {inc.asignado_a_details?.full_name ?? "Sin asignar"}
                       </span>
                     </div>
                   </div>
@@ -514,8 +634,14 @@ export default function RoomsManagementPage() {
       </div>
 
       {/* Dialogs existentes */}
-      <CreateRoomDialog isOpen={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      <CreatePlantaDialog isOpen={isCreatePlantaDialogOpen} onOpenChange={setIsCreatePlantaDialogOpen} />
+      <CreateRoomDialog
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
+      <CreatePlantaDialog
+        isOpen={isCreatePlantaDialogOpen}
+        onOpenChange={setIsCreatePlantaDialogOpen}
+      />
       <UpdateRoomDialog
         key={selectedRoom?.id || "none"}
         isOpen={isUpdateDialogOpen}

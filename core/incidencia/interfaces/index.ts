@@ -41,7 +41,7 @@ export interface CreateIncidenciaRequest {
   fecha_resolucion?: string | null;
 }
 
-export interface UpdateIncidenciaRequest extends Partial<CreateIncidenciaRequest> {}
+export type UpdateIncidenciaRequest = Partial<CreateIncidenciaRequest>;
 
 export interface PersonalMantenimiento {
   id: number;

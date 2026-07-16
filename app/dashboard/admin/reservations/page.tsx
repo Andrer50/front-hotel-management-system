@@ -125,9 +125,11 @@ export default function ReservationsPage() {
 
   // Check-in / Check-out
   const [isCheckInDialogOpen, setIsCheckInDialogOpen] = useState(false);
-  const [checkInReservation, setCheckInReservation] = useState<Reservation | null>(null);
+  const [checkInReservation, setCheckInReservation] =
+    useState<Reservation | null>(null);
   const [isCheckOutDialogOpen, setIsCheckOutDialogOpen] = useState(false);
-  const [checkOutReservation, setCheckOutReservation] = useState<Reservation | null>(null);
+  const [checkOutReservation, setCheckOutReservation] =
+    useState<Reservation | null>(null);
 
   // Estados para el registro de consumos extra
   const [isConsumosDialogOpen, setIsConsumosDialogOpen] = useState(false);
@@ -236,10 +238,11 @@ export default function ReservationsPage() {
           <div className="flex bg-zinc-100 p-1 rounded-xl self-start md:self-center">
             <button
               onClick={() => setViewTab("LISTADO")}
-              className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all ${viewTab === "LISTADO"
+              className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all ${
+                viewTab === "LISTADO"
                   ? "bg-white text-brand-blue shadow-xs"
                   : "text-dark-secondary hover:text-dark-primary"
-                }`}
+              }`}
             >
               LISTADO
             </button>
@@ -250,10 +253,11 @@ export default function ReservationsPage() {
                   description: "Cargando diagrama...",
                 });
               }}
-              className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all ${viewTab === "CALENDARIO"
+              className={`text-xs font-extrabold px-5 py-2.5 rounded-lg transition-all ${
+                viewTab === "CALENDARIO"
                   ? "bg-white text-brand-blue shadow-xs"
                   : "text-dark-secondary hover:text-dark-primary"
-                }`}
+              }`}
             >
               CALENDARIO
             </button>
@@ -366,10 +370,11 @@ export default function ReservationsPage() {
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all ${statusFilter === status
+                className={`text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all ${
+                  statusFilter === status
                     ? "bg-white text-brand-blue shadow-xs"
                     : "text-dark-secondary hover:text-dark-primary"
-                  }`}
+                }`}
               >
                 {status === "ALL" ? "Todos" : status}
               </button>
@@ -473,7 +478,8 @@ export default function ReservationsPage() {
                             Modificar
                           </button>
 
-                          {(res.estado === "EN_CURSO" || res.estado === "COMPLETADA") && (
+                          {(res.estado === "EN_CURSO" ||
+                            res.estado === "COMPLETADA") && (
                             <button
                               onClick={() => handleBilling(res)}
                               className="text-xs font-bold text-blue-600 hover:text-blue-700 px-2.5 py-1 hover:bg-blue-50 rounded-lg"
@@ -492,7 +498,8 @@ export default function ReservationsPage() {
                           )}
 
                           {/* Check-In — solo para PENDIENTE o CONFIRMADA */}
-                          {(res.estado === "PENDIENTE" || res.estado === "CONFIRMADA") && (
+                          {(res.estado === "PENDIENTE" ||
+                            res.estado === "CONFIRMADA") && (
                             <button
                               onClick={() => handleCheckIn(res)}
                               className="text-xs font-bold text-emerald-600 hover:text-emerald-700 px-2.5 py-1 hover:bg-emerald-50 rounded-lg"
@@ -605,7 +612,7 @@ export default function ReservationsPage() {
       <UpdateReservationDialog
         key={
           selectedReservation
-            ? `update-${selectedReservation.id}`
+            ? `update-${selectedReservation.id}-${isUpdateDialogOpen}`
             : "update-none"
         }
         isOpen={isUpdateDialogOpen}

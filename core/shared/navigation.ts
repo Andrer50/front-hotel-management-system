@@ -13,6 +13,8 @@ import {
   Brush,
   Receipt,
   LucideIcon,
+  TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 
 export interface NavItem {
@@ -65,6 +67,12 @@ export const navigationItems: NavItem[] = [
     permission: "can_manage_rooms", // Protegido con el rol de administración de cuartos
   },
   {
+    name: "Precios Dinámicos",
+    href: "/dashboard/admin/precios-dinamicos",
+    icon: TrendingUp,
+    permission: "can_manage_rooms",
+  },
+  {
     name: "Estados de Limpieza",
     href: "/dashboard/admin/limpieza",
     icon: Brush,
@@ -89,6 +97,12 @@ export const navigationItems: NavItem[] = [
     permission: "can_manage_inventory",
   },
   {
+    name: "Inventario Predictivo",
+    href: "/dashboard/admin/inventory/predictivo",
+    icon: Package,
+    permission: "can_manage_inventory",
+  },
+  {
     name: "Roles",
     href: "/dashboard/admin/roles",
     icon: Shield,
@@ -99,5 +113,10 @@ export const navigationItems: NavItem[] = [
     href: "/dashboard/admin/statistics",
     icon: BarChart3,
     permission: "can_view_reports",
+  },
+  {
+    name: "Reseñas",
+    href: "/dashboard/admin/resenas",
+    icon: MessageSquare,
   },
 ];

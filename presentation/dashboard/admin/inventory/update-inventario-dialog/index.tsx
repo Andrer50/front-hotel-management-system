@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -46,26 +46,24 @@ export function UpdateInventarioDialog({
   const updateMutation = useUpdateInventarioMutation();
   const deleteMutation = useDeleteInventarioMutation();
 
-  const [nombre, setNombre] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [tipo, setTipo] = useState<InventarioTipo>("SUMINISTRO");
-  const [stockActual, setStockActual] = useState("0");
-  const [stockMinimo, setStockMinimo] = useState("0");
-  const [precioUnitario, setPrecioUnitario] = useState("0.00");
-  const [quickStock, setQuickStock] = useState("");
+  const [nombre, setNombre] = useState(inventario?.nombre || "");
+  const [descripcion, setDescripcion] = useState(inventario?.descripcion || "");
+  const [tipo, setTipo] = useState<InventarioTipo>(
+    inventario?.tipo || "SUMINISTRO",
+  );
+  const [stockActual, setStockActual] = useState(
+    inventario?.stock_actual.toString() || "0",
+  );
+  const [stockMinimo, setStockMinimo] = useState(
+    inventario?.stock_minimo.toString() || "0",
+  );
+  const [precioUnitario, setPrecioUnitario] = useState(
+    inventario?.precio_unitario || "0.00",
+  );
+  const [quickStock, setQuickStock] = useState(
+    inventario?.stock_actual.toString() || "",
+  );
   const [confirmDelete, setConfirmDelete] = useState(false);
-
-  useEffect(() => {
-    if (!inventario) return;
-    setNombre(inventario.nombre);
-    setDescripcion(inventario.descripcion || "");
-    setTipo(inventario.tipo);
-    setStockActual(inventario.stock_actual.toString());
-    setStockMinimo(inventario.stock_minimo.toString());
-    setPrecioUnitario(inventario.precio_unitario);
-    setQuickStock(inventario.stock_actual.toString());
-    setConfirmDelete(false);
-  }, [inventario]);
 
   if (!inventario) return null;
 
@@ -205,7 +203,10 @@ export function UpdateInventarioDialog({
 
           <div className="space-y-2">
             <Label>Tipo</Label>
-            <Select value={tipo} onValueChange={(v) => setTipo(v as InventarioTipo)}>
+            <Select
+              value={tipo}
+              onValueChange={(v) => setTipo(v as InventarioTipo)}
+            >
               <SelectTrigger className="rounded-xl">
                 <SelectValue />
               </SelectTrigger>

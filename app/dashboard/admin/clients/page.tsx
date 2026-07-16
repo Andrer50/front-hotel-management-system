@@ -2,19 +2,13 @@
 
 import { useState, useMemo } from "react";
 import {
-  Plus,
   Search,
-  Filter,
   Calendar,
   Download,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
   Clock,
   UserPlus2,
-  ExternalLink,
   Pencil,
-  Tag,
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +16,6 @@ import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -43,8 +36,8 @@ const ITEMS_PER_PAGE = 8;
 export default function ReceptionGuestsPage() {
   const { data: guestsData = [], isLoading } = useGetGuestsQuery();
   const deleteGuestMutation = useDeleteGuestMutation();
-  const { mutateAsync: generarRecomendaciones, isPending: isIaLoading } = useRecomendacionIAMutation(); // 🟢 Hook de React Query para la IA
-
+  const { mutateAsync: generarRecomendaciones, isPending: isIaLoading } = useRecomendacionIAMutation();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "ALL">("ALL");
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,6 +49,36 @@ export default function ReceptionGuestsPage() {
   const [activeGuestForIa, setActiveGuestForIa] = useState<GuestUI | null>(null);
   const [iaResponse, setIaResponse] = useState<any | null>(null);
 
+  // 🚀 DISPARADOR DE RECOMENDACIONES CON GEMINI IA (¡Totalmente corregido y tolerante!)
+  const handleConsultarIA = async (guest: GuestUI) => {
+    setActiveGuestForIa(guest);
+    setIaResponse(null); // Reseteamos la UI
+
+    const payload = {
+      edad: 32,
+      motivo_viaje: "Vacaciones",
+      acompanantes: "Pareja",
+      preferencias_comida: "Ninguna",
+      intereses: "Relajación, piscina y gastronomía",
+    };
+
+    try {
+      const response = await generarRecomendaciones(payload);
+      console.log("Respuesta de la IA:", response);
+
+      if (response) {
+        // Guardamos la respuesta directamente. Si viene envuelta en .data la extraemos, si no, usamos el response entero.
+        const dataFinal = response.data ? response.data : response;
+        setIaResponse(dataFinal);
+      } else {
+        toast.error("No se pudo obtener el análisis");
+      }
+    } catch (error) {
+      console.error("Error en la petición:", error);
+      toast.error("Error al procesar la sugerencia con el servidor");
+    }
+  };
+
   // Mapeo y Filtro de huéspedes interactivo
   const filteredGuests = useMemo(() => {
     const mappedGuests: GuestUI[] = guestsData.map((g) => ({
@@ -65,8 +88,8 @@ export default function ReceptionGuestsPage() {
       document: g.documento,
       documentType: g.tipo_documento,
       phone: g.telefono || "N/A",
-      lastCheckIn: "N/A", 
-      totalStays: 0, 
+      lastCheckIn: "N/A",
+      totalStays: 0,
       status: g.status || "ACTIVE",
       avatarBg: "bg-blue-100 text-blue-600",
       initials: `${g.nombre[0]}${g.apellido[0]}`.toUpperCase(),
@@ -106,11 +129,11 @@ export default function ReceptionGuestsPage() {
     const avgStay =
       total > 0
         ? (
-            filteredGuests.reduce((acc, curr) => acc + curr.totalStays, 0) /
-              total /
-              3 +
-            2.5
-          ).toFixed(1)
+          filteredGuests.reduce((acc, curr) => acc + curr.totalStays, 0) /
+          total /
+          3 +
+          2.5
+        ).toFixed(1)
         : "0.0";
 
     return { total, activeCheckIns, loyaltyRate, avgStay };
@@ -129,32 +152,6 @@ export default function ReceptionGuestsPage() {
     toast.info("Exportación en curso", {
       description: "Generando archivo CSV del listado de huéspedes...",
     });
-  };
-
-  // 🚀 DISPARADOR DE RECOMENDACIONES CON GEMINI IA
-  const handleConsultarIA = async (guest: GuestUI) => {
-    setActiveGuestForIa(guest);
-    setIaResponse(null); // Limpiamos la consulta anterior
-
-    // Simulamos un perfil lógico en base a lo que sabemos de la fila del huésped
-    const payload = {
-      edad: 32, // Edad base promedio o tomada del modelo si la tuvieras
-      motivo_viaje: "Vacaciones",
-      acompanantes: "Pareja",
-      preferencias_comida: "Ninguna",
-      intereses: "Relajación, piscina y gastronomía",
-    };
-
-    try {
-      const response = await generarRecomendaciones(payload);
-      if (response && response.status === "success") {
-        setIaResponse(response.data);
-      } else {
-        toast.error("No se pudo estructurar el análisis");
-      }
-    } catch (error) {
-      toast.error("Error al procesar la sugerencia con el servidor");
-    }
   };
 
   if (isLoading) {
@@ -265,11 +262,10 @@ export default function ReceptionGuestsPage() {
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status)}
-                  className={`text-[11px] font-bold px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${
-                    isActive
+                  className={`text-[11px] font-bold px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${isActive
                       ? "bg-white text-brand-blue shadow-xs"
                       : "text-dark-secondary hover:text-dark-primary hover:bg-zinc-100/30"
-                  }`}
+                    }`}
                 >
                   {status === "ALL" ? "Todos los Estados" : status}
                 </button>
@@ -339,8 +335,12 @@ export default function ReceptionGuestsPage() {
 
                     <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary">
                       <div className="flex flex-col">
-                        <span className="font-bold text-dark-primary">{guest.document}</span>
-                        <span className="text-[10px] opacity-70">{guest.documentType}</span>
+                        <span className="font-bold text-dark-primary">
+                          {guest.document}
+                        </span>
+                        <span className="text-[10px] opacity-70">
+                          {guest.documentType}
+                        </span>
                       </div>
                     </td>
 
@@ -369,11 +369,10 @@ export default function ReceptionGuestsPage() {
                         <button
                           onClick={() => handleConsultarIA(guest)}
                           title="Consultar Conserje IA"
-                          className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1 ${
-                            activeGuestForIa?.id === guest.id
+                          className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1 ${activeGuestForIa?.id === guest.id
                               ? "bg-indigo-50 border-indigo-200 text-indigo-600"
                               : "bg-zinc-50 hover:bg-indigo-50 border-zinc-150 hover:border-indigo-100 text-zinc-500 hover:text-indigo-600"
-                          }`}
+                            }`}
                         >
                           <Sparkles className="h-3.5 w-3.5" />
                           <span className="text-[10px] font-extrabold">IA</span>
@@ -406,37 +405,52 @@ export default function ReceptionGuestsPage() {
         {/* Paginación de Tabla */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-zinc-100/60 text-xs text-dark-secondary select-none">
           <span>
-            Mostrando {paginatedGuests.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-
-            {(currentPage - 1) * ITEMS_PER_PAGE + paginatedGuests.length} de{" "}
+            Mostrando{" "}
+            {paginatedGuests.length > 0
+              ? (currentPage - 1) * ITEMS_PER_PAGE + 1
+              : 0}
+            -{(currentPage - 1) * ITEMS_PER_PAGE + paginatedGuests.length} de{" "}
             {filteredGuests.length} resultados
           </span>
 
           <Pagination className="mx-0 w-auto">
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={
+                    currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                   text="Anterior"
                 />
               </PaginationItem>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(page)}
-                    isActive={currentPage === page}
-                    className="cursor-pointer h-8 w-8 rounded-lg"
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer h-8 w-8 rounded-lg"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ),
+              )}
 
               <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                <PaginationNext
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  className={
+                    currentPage === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                   text="Siguiente"
                 />
               </PaginationItem>
@@ -550,12 +564,10 @@ export default function ReceptionGuestsPage() {
         </div>
       </div>
 
-      <CreateGuestDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-      />
+      <CreateGuestDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
 
       <EditGuestDialog
+        key={selectedGuest ? `edit-${selectedGuest.id}-${isEditOpen}` : "none"}
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
         guest={selectedGuest}

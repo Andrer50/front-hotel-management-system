@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import {
   Search,
-  Receipt,
   Calendar,
   Download,
   Loader2,
@@ -26,7 +25,6 @@ import { toast } from "sonner";
 import { BillingDialog } from "@/presentation/dashboard/admin/reservations/billing-dialog";
 import { useGetComprobantesQuery } from "@/modules/billing/domain/hooks/useBillingQueries";
 import { useGetReservationQuery } from "@/modules/reservation/domain/hooks/useReservationQueries";
-import { Comprobante } from "@/core/billing/interfaces";
 import { BillingType, PaymentMethod } from "@/core/shared";
 
 const ITEMS_PER_PAGE = 8;

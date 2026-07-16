@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -27,22 +26,15 @@ export function UpdateRoleDialog({
   onOpenChange,
   role,
 }: UpdateRoleDialogProps) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(role?.name || "");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const updateRoleMutation = useUpdateRoleMutation();
 
-  useEffect(() => {
-    if (isOpen && role) {
-      setName(role.name || "");
-      setErrors({});
-    }
-  }, [isOpen, role]);
-
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
     if (!name.trim()) newErrors.name = "El nombre del rol es obligatorio.";
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -71,12 +63,12 @@ export function UpdateRoleDialog({
           });
           onOpenChange(false);
         },
-        onError: (e: any) => {
+        onError: (e) => {
           toast.error("Error al actualizar rol", {
             description: e.message || "No se pudo conectar con el servidor.",
           });
         },
-      }
+      },
     );
   };
 
@@ -152,7 +144,9 @@ export function UpdateRoleDialog({
               {updateRoleMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {updateRoleMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              {updateRoleMutation.isPending
+                ? "Guardando..."
+                : "Guardar Cambios"}
             </Button>
           </div>
         </form>

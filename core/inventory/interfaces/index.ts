@@ -35,3 +35,18 @@ export interface UpdateInventarioRequest {
   precio_unitario?: string;
   tipo?: InventarioTipo;
 }
+
+export interface InventarioPredictivo {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  stock_actual: number;
+  stock_minimo: number;
+  stock_ideal: number;
+  projected_consumption: number;
+  projected_stock: number;
+  suggested_order: number;
+  estimated_stockout_date: string;
+  sede: string;
+}
+

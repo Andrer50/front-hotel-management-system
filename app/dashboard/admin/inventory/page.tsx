@@ -37,9 +37,8 @@ export default function InventorySuppliesPage() {
   const [soloBajoStock, setSoloBajoStock] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
-  const [selectedInventario, setSelectedInventario] = useState<Inventario | null>(
-    null,
-  );
+  const [selectedInventario, setSelectedInventario] =
+    useState<Inventario | null>(null);
 
   const apiFilters = useMemo(() => {
     const filters: { tipo?: InventarioTipo; bajo_stock?: boolean } = {};
@@ -48,7 +47,8 @@ export default function InventorySuppliesPage() {
     return Object.keys(filters).length > 0 ? filters : undefined;
   }, [tipoFilter, soloBajoStock]);
 
-  const { data: inventarios = [], isLoading } = useGetInventariosQuery(apiFilters);
+  const { data: inventarios = [], isLoading } =
+    useGetInventariosQuery(apiFilters);
   const { data: bajoStockItems = [], isLoading: loadingBajoStock } =
     useGetInventariosBajoStockQuery();
 
@@ -71,7 +71,8 @@ export default function InventorySuppliesPage() {
       0,
     );
     const enVistaActual = filteredInventory.filter(
-      (item) => getStockNivel(item.stock_actual, item.stock_minimo) !== "OPTIMO",
+      (item) =>
+        getStockNivel(item.stock_actual, item.stock_minimo) !== "OPTIMO",
     ).length;
     const totalValue = calcularValorInventario(filteredInventory);
 
@@ -412,8 +413,16 @@ export default function InventorySuppliesPage() {
         </div>
       </div>
 
-      <CreateInventarioDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      <CreateInventarioDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+      />
       <UpdateInventarioDialog
+        key={
+          selectedInventario
+            ? `update-${selectedInventario.id}-${isUpdateOpen}`
+            : "none"
+        }
         open={isUpdateOpen}
         onOpenChange={setIsUpdateOpen}
         inventario={selectedInventario}

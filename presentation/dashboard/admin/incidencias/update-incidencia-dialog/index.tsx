@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -62,34 +62,27 @@ export function UpdateIncidenciaDialog({
   const updateMutation = useUpdateIncidenciaMutation();
   const deleteMutation = useDeleteIncidenciaMutation();
 
-  const [titulo, setTitulo] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [prioridad, setPrioridad] = useState<IncidenciaPrioridad>("MEDIA");
-  const [estado, setEstado] = useState<IncidenciaEstado>("PENDIENTE");
-  const [personalId, setPersonalId] = useState("");
-  const [ubicacionTipo, setUbicacionTipo] = useState<UbicacionTipo>("habitacion");
-  const [habitacionId, setHabitacionId] = useState("");
-  const [areaComunId, setAreaComunId] = useState("");
+  const [titulo, setTitulo] = useState(incidencia?.titulo || "");
+  const [descripcion, setDescripcion] = useState(incidencia?.descripcion || "");
+  const [prioridad, setPrioridad] = useState<IncidenciaPrioridad>(
+    incidencia?.prioridad || "MEDIA",
+  );
+  const [estado, setEstado] = useState<IncidenciaEstado>(
+    incidencia?.estado || "PENDIENTE",
+  );
+  const [personalId, setPersonalId] = useState(
+    incidencia?.asignado_a_details?.id?.toString() ?? "none",
+  );
+  const [ubicacionTipo, setUbicacionTipo] = useState<UbicacionTipo>(
+    incidencia?.habitacion ? "habitacion" : "area_comun",
+  );
+  const [habitacionId, setHabitacionId] = useState(
+    incidencia?.habitacion?.toString() || "",
+  );
+  const [areaComunId, setAreaComunId] = useState(
+    incidencia?.area_comun?.toString() || "",
+  );
   const [confirmDelete, setConfirmDelete] = useState(false);
-
-  useEffect(() => {
-    if (!incidencia) return;
-    setTitulo(incidencia.titulo);
-    setDescripcion(incidencia.descripcion || "");
-    setPrioridad(incidencia.prioridad);
-    setEstado(incidencia.estado);
-    setPersonalId(incidencia.asignado_a_details?.id?.toString() ?? "none");
-    if (incidencia.habitacion) {
-      setUbicacionTipo("habitacion");
-      setHabitacionId(incidencia.habitacion.toString());
-      setAreaComunId("");
-    } else if (incidencia.area_comun) {
-      setUbicacionTipo("area_comun");
-      setAreaComunId(incidencia.area_comun.toString());
-      setHabitacionId("");
-    }
-    setConfirmDelete(false);
-  }, [incidencia]);
 
   if (!incidencia) return null;
 
@@ -236,7 +229,9 @@ export function UpdateIncidenciaDialog({
 
         <form onSubmit={handleSave} className="p-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-bold text-dark-primary">Título</Label>
+            <Label className="text-xs font-bold text-dark-primary">
+              Título
+            </Label>
             <Input
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
@@ -247,7 +242,9 @@ export function UpdateIncidenciaDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label className="text-xs font-bold text-dark-primary">Descripción</Label>
+            <Label className="text-xs font-bold text-dark-primary">
+              Descripción
+            </Label>
             <Textarea
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
@@ -258,7 +255,9 @@ export function UpdateIncidenciaDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-bold text-dark-primary">Prioridad</Label>
+              <Label className="text-xs font-bold text-dark-primary">
+                Prioridad
+              </Label>
               <Select
                 value={prioridad}
                 onValueChange={(v) => setPrioridad(v as IncidenciaPrioridad)}
@@ -275,7 +274,9 @@ export function UpdateIncidenciaDialog({
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label className="text-xs font-bold text-dark-primary">Estado</Label>
+              <Label className="text-xs font-bold text-dark-primary">
+                Estado
+              </Label>
               <Select
                 value={estado}
                 onValueChange={(v) => setEstado(v as IncidenciaEstado)}
@@ -295,7 +296,9 @@ export function UpdateIncidenciaDialog({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label className="text-xs font-bold text-dark-primary">Ubicación</Label>
+            <Label className="text-xs font-bold text-dark-primary">
+              Ubicación
+            </Label>
             <div className="flex gap-2 p-1 bg-zinc-100 rounded-xl">
               <button
                 type="button"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, ShieldCheck, Loader2, Check } from "lucide-react";
+import { ShieldCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useSession } from "next-auth/react";
 import { useCreateRoleMutation } from "@/modules/role/domain/hooks/useCreateRoleMutation";
 import { toast } from "sonner";
 import { permissionTranslations } from "@/modules/role/features/constants";
@@ -122,10 +121,14 @@ export function CreateRoleDialog({
   };
 
   // Diccionario de traducción para codenames (mismo que en la página principal)
-  
 
   const getPermissionInfo = (codename: string) => {
-    return permissionTranslations[codename] || { title: codename, desc: "Sin descripción disponible." };
+    return (
+      permissionTranslations[codename] || {
+        title: codename,
+        desc: "Sin descripción disponible.",
+      }
+    );
   };
 
   return (

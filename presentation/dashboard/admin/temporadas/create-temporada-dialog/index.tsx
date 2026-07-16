@@ -4,7 +4,16 @@ import { Plus, Loader2, TrendingUp, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
+=======
+import { useState } from "react";
+import { 
+  useCreateTemporadaMutation, 
+  useUpdateTemporadaMutation 
+} from "@/modules/temporada/domain/hooks/useTemporadaMutations";
+import { Temporada } from "@/core/temporada/interfaces";
+>>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
 
 // 🚀 CAMBIO CLAVE: Importamos el nuevo hook modular de mutaciones
 import { useTemporadasMutations } from "@/modules/temporadas/hooks/useTemporadasMutations";
@@ -12,8 +21,13 @@ import { updateTemporadaAction } from "@/core/temporadas/actions/temporadasActio
 
 interface CreateTemporadaDialogProps {
   onTemporadaCreated: () => void;
+<<<<<<< HEAD
   temporadaAEditar: any | null;       
   setTemporadaAEditar: (val: any | null) => void; 
+=======
+  temporadaAEditar: Temporada | null;       // ← Recibe la temporada seleccionada
+  setTemporadaAEditar: (val: Temporada | null) => void; // ← Función para limpiar estado
+>>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
 }
 
 export function CreateTemporadaDialog({ 
@@ -21,6 +35,7 @@ export function CreateTemporadaDialog({
   temporadaAEditar, 
   setTemporadaAEditar 
 }: CreateTemporadaDialogProps) {
+<<<<<<< HEAD
   const [nombre, setNombre] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
@@ -39,6 +54,19 @@ export function CreateTemporadaDialog({
       limpiarFormulario();
     }
   }, [temporadaAEditar]);
+=======
+  const createMutation = useCreateTemporadaMutation();
+  const updateMutation = useUpdateTemporadaMutation();
+
+  const [nombre, setNombre] = useState(temporadaAEditar?.nombre || "");
+  const [fechaInicio, setFechaInicio] = useState(temporadaAEditar?.fecha_inicio || "");
+  const [fechaFin, setFechaFin] = useState(temporadaAEditar?.fecha_fin || "");
+  const [porcentaje, setPorcentaje] = useState(
+    temporadaAEditar?.porcentaje !== undefined ? temporadaAEditar.porcentaje.toString() : ""
+  );
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
+>>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
 
   const limpiarFormulario = () => {
     setNombre("");
@@ -48,7 +76,7 @@ export function CreateTemporadaDialog({
     setTemporadaAEditar(null);
   };
 
-  const handleSaveTemporada = async (e: React.FormEvent) => {
+  const handleSaveTemporada = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!nombre || !fechaInicio || !fechaFin || !porcentaje) {
@@ -56,6 +84,7 @@ export function CreateTemporadaDialog({
       return;
     }
 
+<<<<<<< HEAD
     const esEdicion = !!temporadaAEditar;
     const payload = { 
       nombre, 
@@ -87,6 +116,50 @@ export function CreateTemporadaDialog({
     } catch (error) {
       console.error("Error guardando temporada:", error);
       toast.error("Error de conexión con el servidor");
+=======
+    const valorPorcentaje = parseInt(porcentaje);
+    if (isNaN(valorPorcentaje)) {
+      toast.warning("Impacto inválido", { description: "Por favor introduce un número válido." });
+      return;
+    }
+
+    const data = { 
+      nombre, 
+      fecha_inicio: fechaInicio, 
+      fecha_fin: fechaFin, 
+      porcentaje: valorPorcentaje, 
+      is_active: true 
+    };
+
+    if (temporadaAEditar) {
+      updateMutation.mutate(
+        { id: temporadaAEditar.id, data },
+        {
+          onSuccess: () => {
+            toast.success("¡Temporada Actualizada!");
+            limpiarFormulario();
+            onTemporadaCreated();
+          },
+          onError: (error: Error) => {
+            toast.error("Error al guardar", { description: error.message || "Error al actualizar la temporada" });
+          }
+        }
+      );
+    } else {
+      createMutation.mutate(
+        data,
+        {
+          onSuccess: () => {
+            toast.success("¡Temporada Creada!");
+            limpiarFormulario();
+            onTemporadaCreated();
+          },
+          onError: (error: Error) => {
+            toast.error("Error al guardar", { description: error.message || "Error al crear la temporada" });
+          }
+        }
+      );
+>>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
     }
   };
 
@@ -136,14 +209,22 @@ export function CreateTemporadaDialog({
 
         <Button 
           type="submit" 
+<<<<<<< HEAD
           disabled={loading} 
+=======
+          disabled={isPending} 
+>>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
           className={`mt-2 h-11 w-full text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
             temporadaAEditar 
               ? "bg-blue-600 hover:bg-blue-700 shadow-blue-600/15" 
               : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/15"
           }`}
         >
+<<<<<<< HEAD
           {loading ? (
+=======
+          {isPending ? (
+>>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : temporadaAEditar ? (
             <Save className="h-4 w-4" />

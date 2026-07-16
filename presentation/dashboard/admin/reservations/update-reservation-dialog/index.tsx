@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -37,24 +37,14 @@ export function UpdateReservationDialog({
   onReservationUpdated,
 }: UpdateReservationDialogProps) {
   const updateReservationMutation = useUpdateReservationMutation();
-  
+
   const [formData, setFormData] = useState<{
     estado: Reservation["estado"];
     tarifa_aplicada: string;
   }>({
-    estado: "PENDIENTE",
-    tarifa_aplicada: "",
+    estado: reservation?.estado || "PENDIENTE",
+    tarifa_aplicada: reservation?.tarifa_aplicada?.toString() || "",
   });
-
-  // Sincroniza el formulario cuando el modal recibe una reserva seleccionada
-  useEffect(() => {
-    if (reservation) {
-      setFormData({
-        estado: reservation.estado || "PENDIENTE",
-        tarifa_aplicada: reservation.tarifa_aplicada?.toString() || "",
-      });
-    }
-  }, [reservation, isOpen]);
 
   const estados = [
     { value: "PENDIENTE", label: "Pendiente" },
@@ -124,7 +114,12 @@ export function UpdateReservationDialog({
             </Label>
             <Select
               value={formData.estado}
-              onValueChange={(val) => setFormData({ ...formData, estado: val as Reservation["estado"] })}
+              onValueChange={(val) =>
+                setFormData({
+                  ...formData,
+                  estado: val as Reservation["estado"],
+                })
+              }
             >
               <SelectTrigger
                 style={{
