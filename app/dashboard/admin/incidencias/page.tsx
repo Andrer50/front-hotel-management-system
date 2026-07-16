@@ -33,7 +33,7 @@ export default function IncidenciasPage() {
       tecnicoAsignado: "Jorge Torres",
       especialidad: "Electricidad",
       estado: "Asignado",
-      razonIA: "Prioridad crítica. Único electricista certificado disponible en el turno de tarde."
+      razonIA: "Prioridad crítica. Único electricista disponible en el turno de tarde."
     }
   ]);
 
@@ -48,21 +48,21 @@ export default function IncidenciasPage() {
         { nombre: "Luis Castro", especialidad: "Fontanería" },
         { nombre: "Jorge Torres", especialidad: "Electricidad" },
         { nombre: "Carlos Mendoza", especialidad: "Climatización" },
-        { nombre: "Raúl Peña", especialidad: "Mantenimiento General" }
+        { fontanería: "Raúl Peña", especialidad: "Mantenimiento General" }
       ];
 
-      let tecnicoElegido = tecnicos[3];
+      let tecnicoElegido = { nombre: "Raúl Peña", especialidad: "Mantenimiento General" };
       let explicacion = "Asignado al personal de guardia general debido a baja complejidad detectada.";
 
       const textoMinuscula = incidencia.toLowerCase();
       if (textoMinuscula.includes('agua') || textoMinuscula.includes('tubería') || textoMinuscula.includes('fuga') || textoMinuscula.includes('caño') || textoMinuscula.includes('ducha')) {
-        tecnicoElegido = tecnicos[0];
+        tecnicoElegido = { nombre: "Luis Castro", especialidad: "Fontanería" };
         explicacion = "El procesamiento de lenguaje natural detectó problemas de plomería. Asignado a especialista en sistemas hidráulicos.";
       } else if (textoMinuscula.includes('luz') || textoMinuscula.includes('enchufe') || textoMinuscula.includes('cable') || textoMinuscula.includes('corto') || textoMinuscula.includes('corriente')) {
-        tecnicoElegido = tecnicos[1];
+        tecnicoElegido = { nombre: "Jorge Torres", especialidad: "Electricidad" };
         explicacion = "El procesamiento de lenguaje natural detectó riesgo eléctrico. Asignado de forma prioritaria a electricista certificado.";
       } else if (textoMinuscula.includes('aire') || textoMinuscula.includes('frío') || textoMinuscula.includes('calor') || textoMinuscula.includes('ventilador') || textoMinuscula.includes('clima')) {
-        tecnicoElegido = tecnicos[2];
+        tecnicoElegido = { nombre: "Carlos Mendoza", especialidad: "Climatización" };
         explicacion = "El procesamiento de lenguaje natural identificó falla de HVAC. Asignado a especialista en climatización activa.";
       }
 
@@ -84,10 +84,10 @@ export default function IncidenciasPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 bg-gray-50 min-h-screen text-gray-800">
-      {/* Cabecera estilo Dashboard de Asturias */}
+      {/* Cabecera sin RF-24 */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">Mantenimiento IA</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">RF-24: Resolución Automatizada de Incidencias</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mt-1">Resolución Automatizada de Incidencias</h1>
         <p className="text-sm text-gray-500">Asignación inteligente y priorización automática de tareas mediante Inteligencia Artificial.</p>
       </div>
 
@@ -118,9 +118,9 @@ export default function IncidenciasPage() {
                   onChange={(e) => setPrioridad(e.target.value as any)}
                   className="w-full p-2.5 text-sm bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
-                  <option value="Baja">Baja (Mantenimiento menor)</option>
-                  <option value="Media">Media (Incomodidad del huésped)</option>
-                  <option value="Alta">Alta (Riesgo / Habitación inoperativa)</option>
+                  <option value="Baja">Baja</option>
+                  <option value="Media">Media</option>
+                  <option value="Alta">Alta</option>
                 </select>
               </div>
 
