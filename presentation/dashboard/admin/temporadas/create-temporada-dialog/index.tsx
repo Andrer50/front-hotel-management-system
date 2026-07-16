@@ -4,16 +4,12 @@ import { Plus, Loader2, TrendingUp, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-<<<<<<< HEAD
-import { useState, useEffect } from "react";
-=======
 import { useState } from "react";
 import { 
   useCreateTemporadaMutation, 
   useUpdateTemporadaMutation 
 } from "@/modules/temporada/domain/hooks/useTemporadaMutations";
 import { Temporada } from "@/core/temporada/interfaces";
->>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
 
 // 🚀 CAMBIO CLAVE: Importamos el nuevo hook modular de mutaciones
 import { useTemporadasMutations } from "@/modules/temporadas/hooks/useTemporadasMutations";
@@ -21,13 +17,8 @@ import { updateTemporadaAction } from "@/core/temporadas/actions/temporadasActio
 
 interface CreateTemporadaDialogProps {
   onTemporadaCreated: () => void;
-<<<<<<< HEAD
-  temporadaAEditar: any | null;       
-  setTemporadaAEditar: (val: any | null) => void; 
-=======
   temporadaAEditar: Temporada | null;       // ← Recibe la temporada seleccionada
   setTemporadaAEditar: (val: Temporada | null) => void; // ← Función para limpiar estado
->>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
 }
 
 export function CreateTemporadaDialog({ 
@@ -35,26 +26,6 @@ export function CreateTemporadaDialog({
   temporadaAEditar, 
   setTemporadaAEditar 
 }: CreateTemporadaDialogProps) {
-<<<<<<< HEAD
-  const [nombre, setNombre] = useState("");
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-  const [porcentaje, setPorcentaje] = useState("");
-
-  // 📈 JALAMOS EL HOOK DE MUTACIONES (Renombramos isSubmitting a loading para no romper el HTML de abajo)
-  const { crearTemporada, isSubmitting: loading } = useTemporadasMutations();
-
-  useEffect(() => {
-    if (temporadaAEditar) {
-      setNombre(temporadaAEditar.nombre || "");
-      setFechaInicio(temporadaAEditar.fecha_inicio || "");
-      setFechaFin(temporadaAEditar.fecha_fin || "");
-      setPorcentaje(temporadaAEditar.porcentaje !== undefined ? temporadaAEditar.porcentaje.toString() : "");
-    } else {
-      limpiarFormulario();
-    }
-  }, [temporadaAEditar]);
-=======
   const createMutation = useCreateTemporadaMutation();
   const updateMutation = useUpdateTemporadaMutation();
 
@@ -66,7 +37,6 @@ export function CreateTemporadaDialog({
   );
 
   const isPending = createMutation.isPending || updateMutation.isPending;
->>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
 
   const limpiarFormulario = () => {
     setNombre("");
@@ -84,39 +54,6 @@ export function CreateTemporadaDialog({
       return;
     }
 
-<<<<<<< HEAD
-    const esEdicion = !!temporadaAEditar;
-    const payload = { 
-      nombre, 
-      fecha_inicio: fechaInicio, 
-      fecha_fin: fechaFin, 
-      porcentaje: parseInt(porcentaje), 
-      is_active: true 
-    };
-
-    try {
-      let response: any;
-
-      if (esEdicion) {
-        response = await updateTemporadaAction(temporadaAEditar.id, payload);
-      } else {
-        response = await crearTemporada(payload);
-      }
-
-      // Validamos el éxito de la operación en base a la respuesta de Django o Axios
-      const esExitoso = response && (response.status === "success" || response.id || response.data?.status === "success");
-
-      if (esExitoso) {
-        toast.success(esEdicion ? "¡Temporada Actualizada!" : "¡Temporada Creada!");
-        limpiarFormulario();
-        onTemporadaCreated();
-      } else {
-        toast.error("Error al guardar la temporada");
-      }
-    } catch (error) {
-      console.error("Error guardando temporada:", error);
-      toast.error("Error de conexión con el servidor");
-=======
     const valorPorcentaje = parseInt(porcentaje);
     if (isNaN(valorPorcentaje)) {
       toast.warning("Impacto inválido", { description: "Por favor introduce un número válido." });
@@ -159,7 +96,6 @@ export function CreateTemporadaDialog({
           }
         }
       );
->>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
     }
   };
 
@@ -209,22 +145,14 @@ export function CreateTemporadaDialog({
 
         <Button 
           type="submit" 
-<<<<<<< HEAD
-          disabled={loading} 
-=======
           disabled={isPending} 
->>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
           className={`mt-2 h-11 w-full text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
             temporadaAEditar 
               ? "bg-blue-600 hover:bg-blue-700 shadow-blue-600/15" 
               : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/15"
           }`}
         >
-<<<<<<< HEAD
-          {loading ? (
-=======
           {isPending ? (
->>>>>>> 323b050b17b38e5f9eeb0428724e943582dd5db6
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : temporadaAEditar ? (
             <Save className="h-4 w-4" />
