@@ -1,577 +1,196 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
-import {
-  Search,
-  Calendar,
-  Download,
-  Sparkles,
-  Clock,
-  UserPlus2,
-  Pencil,
-  CheckCircle2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { toast } from "sonner";
-import { CreateGuestDialog } from "@/presentation/dashboard/admin/clients/create-guest-dialog";
-import { EditGuestDialog } from "@/presentation/dashboard/admin/clients/edit-guest-dialog";
-// 🟢 Rutas originales correctas apuntando al módulo de huéspedes
-import { useGetGuestsQuery } from "@/modules/guest/domain/hooks/useGuestQueries";
-import { useDeleteGuestMutation, useRecomendacionIAMutation } from "@/modules/guest/domain/hooks/useGuestMutations";
-import { Loader2 } from "lucide-react";
-import { Guest, GuestUI } from "@/core/guest/interfaces";
-import { Status } from "@/core/shared";
+import React, { useState } from 'react';
 
-const ITEMS_PER_PAGE = 8;
+interface Task {
+  id: string;
+  incidencia: string;
+  prioridad: 'Baja' | 'Media' | 'Alta';
+  tecnicoAsignado: string;
+  especialidad: string;
+  estado: 'Asignado' | 'En Progreso' | 'Resuelto';
+  razonIA: string;
+}
 
-export default function ReceptionGuestsPage() {
-  const { data: guestsData = [], isLoading } = useGetGuestsQuery();
-  const deleteGuestMutation = useDeleteGuestMutation();
-  const { mutateAsync: generarRecomendaciones, isPending: isIaLoading } = useRecomendacionIAMutation();
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Status | "ALL">("ALL");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
-
-  // 🧠 Estados para el Conserje Virtual Interactivo
-  const [activeGuestForIa, setActiveGuestForIa] = useState<GuestUI | null>(null);
-  const [iaResponse, setIaResponse] = useState<any | null>(null);
-
-  // 🚀 DISPARADOR DE RECOMENDACIONES CON GEMINI IA (¡Totalmente corregido y tolerante!)
-  const handleConsultarIA = async (guest: GuestUI) => {
-    setActiveGuestForIa(guest);
-    setIaResponse(null); // Reseteamos la UI
-
-    const payload = {
-      edad: 32,
-      motivo_viaje: "Vacaciones",
-      acompanantes: "Pareja",
-      preferencias_comida: "Ninguna",
-      intereses: "Relajación, piscina y gastronomía",
-    };
-
-    try {
-      const response = await generarRecomendaciones(payload);
-      console.log("Respuesta de la IA:", response);
-
-      if (response) {
-        // Guardamos la respuesta directamente. Si viene envuelta en .data la extraemos, si no, usamos el response entero.
-        const dataFinal = response.data ? response.data : response;
-        setIaResponse(dataFinal);
-      } else {
-        toast.error("No se pudo obtener el análisis");
-      }
-    } catch (error) {
-      console.error("Error en la petición:", error);
-      toast.error("Error al procesar la sugerencia con el servidor");
+export default function IncidenciasPage() {
+  const [incidencia, setIncidencia] = useState('');
+  const [prioridad, setPrioridad] = useState<'Baja' | 'Media' | 'Alta'>('Media');
+  const [procesando, setProcesando] = useState(false);
+  const [historialTareas, setHistorialTareas] = useState<Task[]>([
+    {
+      id: "INC-042",
+      incidencia: "Aire acondicionado no enfría en la Suite 405",
+      prioridad: "Media",
+      tecnicoAsignado: "Carlos Mendoza",
+      especialidad: "Climatización",
+      estado: "En Progreso",
+      razonIA: "Asignado automáticamente por cercanía al sector norte y especialización en sistemas de aire central."
+    },
+    {
+      id: "INC-041",
+      incidencia: "Cortocircuito en tomacorriente de pasillo del piso 2",
+      prioridad: "Alta",
+      tecnicoAsignado: "Jorge Torres",
+      especialidad: "Electricidad",
+      estado: "Asignado",
+      razonIA: "Prioridad crítica. Único electricista certificado disponible en el turno de tarde."
     }
+  ]);
+
+  const manejarSimulacionIA = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!incidencia.trim()) return;
+
+    setProcesando(true);
+
+    setTimeout(() => {
+      const tecnicos = [
+        { nombre: "Luis Castro", especialidad: "Fontanería" },
+        { nombre: "Jorge Torres", especialidad: "Electricidad" },
+        { nombre: "Carlos Mendoza", especialidad: "Climatización" },
+        { nombre: "Raúl Peña", especialidad: "Mantenimiento General" }
+      ];
+
+      let tecnicoElegido = tecnicos[3];
+      let explicacion = "Asignado al personal de guardia general debido a baja complejidad detectada.";
+
+      const textoMinuscula = incidencia.toLowerCase();
+      if (textoMinuscula.includes('agua') || textoMinuscula.includes('tubería') || textoMinuscula.includes('fuga') || textoMinuscula.includes('caño') || textoMinuscula.includes('ducha')) {
+        tecnicoElegido = tecnicos[0];
+        explicacion = "El procesamiento de lenguaje natural detectó problemas de plomería. Asignado a especialista en sistemas hidráulicos.";
+      } else if (textoMinuscula.includes('luz') || textoMinuscula.includes('enchufe') || textoMinuscula.includes('cable') || textoMinuscula.includes('corto') || textoMinuscula.includes('corriente')) {
+        tecnicoElegido = tecnicos[1];
+        explicacion = "El procesamiento de lenguaje natural detectó riesgo eléctrico. Asignado de forma prioritaria a electricista certificado.";
+      } else if (textoMinuscula.includes('aire') || textoMinuscula.includes('frío') || textoMinuscula.includes('calor') || textoMinuscula.includes('ventilador') || textoMinuscula.includes('clima')) {
+        tecnicoElegido = tecnicos[2];
+        explicacion = "El procesamiento de lenguaje natural identificó falla de HVAC. Asignado a especialista en climatización activa.";
+      }
+
+      const nuevaTarea: Task = {
+        id: `INC-0${Math.floor(Math.random() * 900) + 100}`,
+        incidencia: incidencia,
+        prioridad: prioridad,
+        tecnicoAsignado: tecnicoElegido.nombre,
+        especialidad: tecnicoElegido.especialidad,
+        estado: 'Asignado',
+        razonIA: explicacion
+      };
+
+      setHistorialTareas([nuevaTarea, ...historialTareas]);
+      setIncidencia('');
+      setProcesando(false);
+    }, 1200);
   };
-
-  // Mapeo y Filtro de huéspedes interactivo
-  const filteredGuests = useMemo(() => {
-    const mappedGuests: GuestUI[] = guestsData.map((g) => ({
-      id: g.id.toString(),
-      name: `${g.nombre} ${g.apellido}`,
-      email: g.email,
-      document: g.documento,
-      documentType: g.tipo_documento,
-      phone: g.telefono || "N/A",
-      lastCheckIn: "N/A",
-      totalStays: 0,
-      status: g.status || "ACTIVE",
-      avatarBg: "bg-blue-100 text-blue-600",
-      initials: `${g.nombre[0]}${g.apellido[0]}`.toUpperCase(),
-      domainData: g,
-    }));
-
-    return mappedGuests.filter((guest) => {
-      const matchesStatus =
-        statusFilter === "ALL" || guest.status === statusFilter;
-      const matchesSearch =
-        guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        guest.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        guest.document.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        guest.phone.toLowerCase().includes(searchQuery.toLowerCase());
-
-      return matchesStatus && matchesSearch;
-    });
-  }, [guestsData, statusFilter, searchQuery]);
-
-  // Paginación
-  const totalPages = Math.ceil(filteredGuests.length / ITEMS_PER_PAGE);
-  const paginatedGuests = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredGuests.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredGuests, currentPage]);
-
-  // KPIs dinámicos basados en filtros
-  const kpis = useMemo(() => {
-    const total = filteredGuests.length;
-    const activeCheckIns = filteredGuests.filter(
-      (g) => g.status === "ACTIVE",
-    ).length;
-    const loyalCount = filteredGuests.filter((g) => g.totalStays >= 5).length;
-    const loyaltyRate =
-      total > 0 ? ((loyalCount / total) * 100).toFixed(1) : "0.0";
-
-    const avgStay =
-      total > 0
-        ? (
-          filteredGuests.reduce((acc, curr) => acc + curr.totalStays, 0) /
-          total /
-          3 +
-          2.5
-        ).toFixed(1)
-        : "0.0";
-
-    return { total, activeCheckIns, loyaltyRate, avgStay };
-  }, [filteredGuests]);
-
-  const handleCreateGuest = () => {
-    setIsCreateOpen(true);
-  };
-
-  const handleEditGuest = (guest: Guest) => {
-    setSelectedGuest(guest);
-    setIsEditOpen(true);
-  };
-
-  const handleExportData = () => {
-    toast.info("Exportación en curso", {
-      description: "Generando archivo CSV del listado de huéspedes...",
-    });
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <Loader2 className="h-10 w-10 text-brand-blue animate-spin" />
-        <p className="text-sm font-medium text-dark-secondary italic animate-pulse">
-          Sincronizando catálogo de huéspedes con el servidor...
-        </p>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex flex-col gap-8 animate-fade-in">
-      {/* Breadcrumbs superiores y Cabecera de Página */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-dark-secondary/60">
-          <span>RECEPCIÓN</span>
-          <span className="text-zinc-300 font-light">&gt;</span>
-          <span className="text-brand-blue">GESTIÓN DE HUÉSPEDES</span>
-        </div>
+    <div className="p-6 max-w-7xl mx-auto space-y-6 bg-gray-50 min-h-screen text-gray-800">
+      {/* Cabecera estilo Dashboard de Asturias */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">Mantenimiento IA</p>
+        <h1 className="text-2xl font-bold text-gray-900 mt-1">RF-24: Resolución Automatizada de Incidencias</h1>
+        <p className="text-sm text-gray-500">Asignación inteligente y priorización automática de tareas mediante Inteligencia Artificial.</p>
+      </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-1">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-3xl font-extrabold tracking-tight text-dark-primary">
-              Gestión de Huéspedes
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Formulario */}
+        <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-between">
+          <div>
+            <h2 className="text-md font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <span>🛠️</span> Reportar Incidencia Operativa
             </h2>
-            <p className="text-dark-secondary text-sm max-w-2xl leading-relaxed">
-              Controle los registros de huéspedes, supervise el historial de
-              visitas y gestione el estado del ciclo de vida con precisión
-              quirúrgica.
+            <form onSubmit={manejarSimulacionIA} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Descripción del Problema</label>
+                <textarea
+                  value={incidencia}
+                  onChange={(e) => setIncidencia(e.target.value)}
+                  placeholder="Ej: Fuga de agua en el caño del baño de la habitación 102..."
+                  rows={4}
+                  className="w-full p-2.5 text-sm bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Prioridad de la Incidencia</label>
+                <select
+                  value={prioridad}
+                  onChange={(e) => setPrioridad(e.target.value as any)}
+                  className="w-full p-2.5 text-sm bg-gray-50 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="Baja">Baja (Mantenimiento menor)</option>
+                  <option value="Media">Media (Incomodidad del huésped)</option>
+                  <option value="Alta">Alta (Riesgo / Habitación inoperativa)</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                disabled={procesando}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 px-4 rounded-md transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                {procesando ? (
+                  <>
+                    <span className="animate-spin">🔄</span>
+                    Procesando con IA...
+                  </>
+                ) : (
+                  <>
+                    <span>🤖</span>
+                    Asignar con Motor IA
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+          
+          <div className="mt-6 p-3 bg-blue-50 rounded-md border border-blue-100">
+            <p className="text-xs text-blue-700">
+              💡 **Análisis en tiempo real:** El algoritmo lee la descripción para buscar coincidencias clave y determinar el especialista adecuado.
             </p>
           </div>
-
-          <Button
-            onClick={handleCreateGuest}
-            className="bg-brand-blue hover:bg-blue-600 text-white font-semibold rounded-xl text-xs flex items-center gap-2 py-3.5 px-5 shadow-lg shadow-brand-blue/15 hover:shadow-brand-blue/25 transition-all duration-200 cursor-pointer w-fit self-start md:self-center"
-          >
-            <UserPlus2 className="h-4.5 w-4.5" />
-            Nuevo Huésped
-          </Button>
-        </div>
-      </div>
-
-      {/* Grid de KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
-          <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
-            Total Huéspedes
-          </span>
-          <span className="text-3xl font-extrabold text-brand-blue tracking-tight mt-1">
-            {kpis.total}
-          </span>
         </div>
 
-        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
-          <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
-            Check-ins Activos
-          </span>
-          <span className="text-3xl font-extrabold text-brand-blue tracking-tight mt-1">
-            {kpis.activeCheckIns}
-          </span>
-        </div>
+        {/* Panel de Tareas */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
+          <h2 className="text-md font-bold text-gray-900 flex items-center gap-2">
+            <span>📋</span> Control de Tareas Asignadas Inteligentes
+          </h2>
 
-        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
-          <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
-            Tasa de Lealtad
-          </span>
-          <span className="text-3xl font-extrabold text-brand-blue tracking-tight mt-1">
-            {`${kpis.loyaltyRate}%`}
-          </span>
-        </div>
+          <div className="space-y-3">
+            {historialTareas.map((task) => (
+              <div key={task.id} className="p-4 rounded-lg border border-gray-100 bg-gray-50 flex flex-col md:flex-row justify-between gap-4">
+                <div className="space-y-2 max-w-xl">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-mono font-bold bg-gray-200 px-2 py-0.5 rounded text-gray-700">{task.id}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                      task.prioridad === 'Alta' ? 'bg-red-100 text-red-700' :
+                      task.prioridad === 'Media' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                    }`}>
+                      Prioridad {task.prioridad}
+                    </span>
+                    <span className="text-xs text-gray-500">| Técnico: <strong className="text-gray-700">{task.tecnicoAsignado}</strong> ({task.especialidad})</span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900">{task.incidencia}</h3>
+                  <div className="text-xs text-blue-800 bg-blue-50/70 p-2.5 rounded border border-blue-100">
+                    🧠 <strong>Decisión de la IA:</strong> {task.razonIA}
+                  </div>
+                </div>
 
-        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-1">
-          <span className="text-[10px] font-extrabold text-dark-secondary/80 tracking-widest uppercase">
-            Estancia Promedio
-          </span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-3xl font-extrabold text-brand-blue tracking-tight">
-              {kpis.avgStay}
-            </span>
-            <span className="text-xs text-dark-secondary font-medium lowercase">
-              noches
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Barra de Filtros y Búsqueda */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 min-w-0">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 flex-1 min-w-0">
-          <div className="relative flex-1 max-w-sm min-w-0">
-            <Search className="h-3.5 w-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-secondary/60" />
-            <Input
-              type="text"
-              placeholder="Filtrar por nombre o email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white border-zinc-200 rounded-xl text-xs h-10 focus:border-brand-blue/30 transition-all shadow-xs w-full min-w-0"
-            />
-          </div>
-
-          <div className="flex bg-zinc-50 p-1 rounded-xl w-fit">
-            {(["ALL", "ACTIVE", "INACTIVE"] as const).map((status) => {
-              const isActive = statusFilter === status;
-              return (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`text-[11px] font-bold px-3.5 py-1.5 rounded-lg transition-all duration-200 cursor-pointer ${isActive
-                      ? "bg-white text-brand-blue shadow-xs"
-                      : "text-dark-secondary hover:text-dark-primary hover:bg-zinc-100/30"
-                    }`}
-                >
-                  {status === "ALL" ? "Todos los Estados" : status}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            className="h-10 px-4 rounded-xl border-zinc-200 bg-white text-dark-secondary hover:text-dark-primary flex items-center gap-2 text-xs font-semibold shadow-xs cursor-pointer"
-            onClick={() => toast("Rango de fechas de estadía abierto")}
-          >
-            <Calendar className="h-4 w-4 text-dark-secondary/70" />
-            Rango: Últimos 30 días
-          </Button>
-
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-10 w-10 rounded-xl border-zinc-200 bg-white text-dark-secondary hover:text-dark-primary shadow-xs cursor-pointer"
-            onClick={handleExportData}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Contenedor de la Tabla */}
-      <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-6">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[700px]">
-            <thead>
-              <tr className="border-b border-zinc-100 text-[10px] font-bold text-dark-secondary/80 tracking-widest uppercase">
-                <th className="pb-4 font-bold text-left">Nombre</th>
-                <th className="pb-4 font-bold text-left">Email</th>
-                <th className="pb-4 font-bold text-left">Documento</th>
-                <th className="pb-4 font-bold text-left">Teléfono</th>
-                <th className="pb-4 font-bold text-left">Estado</th>
-                <th className="pb-4 font-bold text-right">Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedGuests.length > 0 ? (
-                paginatedGuests.map((guest) => (
-                  <tr
-                    key={guest.id}
-                    className="border-b border-zinc-55 hover:bg-zinc-50/40 transition-colors last:border-0"
-                  >
-                    <td className="py-4.5 pr-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`h-9 w-9 rounded-full ${guest.avatarBg} flex items-center justify-center font-bold text-xs shadow-xs`}
-                        >
-                          {guest.initials}
-                        </div>
-                        <span className="text-xs font-bold text-dark-primary">
-                          {guest.name}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary">
-                      {guest.email}
-                    </td>
-
-                    <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-dark-primary">
-                          {guest.document}
-                        </span>
-                        <span className="text-[10px] opacity-70">
-                          {guest.documentType}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="py-4.5 pr-4 text-xs font-medium text-dark-secondary italic">
-                      {guest.phone}
-                    </td>
-
-                    <td className="py-4.5 pr-4">
-                      {guest.status === "ACTIVE" ? (
-                        <span className="inline-flex items-center gap-1 bg-brand-blue/5 text-brand-blue text-[10px] font-extrabold px-3 py-1 rounded-full border border-brand-blue/10">
-                          <span className="h-1 w-1 rounded-full bg-brand-blue animate-pulse mr-1" />
-                          ACTIVE
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-zinc-100 text-zinc-500 text-[10px] font-extrabold px-3 py-1 rounded-full">
-                          <span className="h-1 w-1 rounded-full bg-zinc-400 mr-1" />
-                          INACTIVE
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Acciones de Fila actualizadas */}
-                    <td className="py-4.5 text-right text-xs">
-                      <div className="flex items-center justify-end gap-3 pl-4">
-                        {/* Botón de Conserje IA */}
-                        <button
-                          onClick={() => handleConsultarIA(guest)}
-                          title="Consultar Conserje IA"
-                          className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center gap-1 ${activeGuestForIa?.id === guest.id
-                              ? "bg-indigo-50 border-indigo-200 text-indigo-600"
-                              : "bg-zinc-50 hover:bg-indigo-50 border-zinc-150 hover:border-indigo-100 text-zinc-500 hover:text-indigo-600"
-                            }`}
-                        >
-                          <Sparkles className="h-3.5 w-3.5" />
-                          <span className="text-[10px] font-extrabold">IA</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleEditGuest(guest.domainData)}
-                          className="p-2 bg-zinc-50 border border-zinc-150 hover:bg-zinc-100 text-zinc-600 rounded-xl transition-all cursor-pointer"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="py-12 text-center text-xs font-medium text-dark-secondary"
-                  >
-                    No se encontraron huéspedes para los filtros activos.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Paginación de Tabla */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-zinc-100/60 text-xs text-dark-secondary select-none">
-          <span>
-            Mostrando{" "}
-            {paginatedGuests.length > 0
-              ? (currentPage - 1) * ITEMS_PER_PAGE + 1
-              : 0}
-            -{(currentPage - 1) * ITEMS_PER_PAGE + paginatedGuests.length} de{" "}
-            {filteredGuests.length} resultados
-          </span>
-
-          <Pagination className="mx-0 w-auto">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className={
-                    currentPage === 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                  text="Anterior"
-                />
-              </PaginationItem>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <PaginationItem key={page}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(page)}
-                      isActive={currentPage === page}
-                      className="cursor-pointer h-8 w-8 rounded-lg"
-                    >
-                      {page}
-                    </PaginationLink>
-                  </PaginationItem>
-                ),
-              )}
-
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  className={
-                    currentPage === totalPages
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                  text="Siguiente"
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      </div>
-
-      {/* Grid de Reportes de Inteligencia y Actividad Reciente */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 🧠 Card 1 Dinámica: Conserje Virtual Gemini 3.1 */}
-        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-4 min-h-[250px]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 text-indigo-600 font-bold text-xs tracking-wider uppercase">
-              <div className="bg-indigo-50 p-2 rounded-xl text-indigo-600">
-                <Sparkles className="h-4.5 w-4.5" />
-              </div>
-              Conserje Virtual Inteligente
-            </div>
-            {activeGuestForIa && (
-              <span className="text-[10px] bg-zinc-100 text-zinc-600 font-extrabold px-2 py-1 rounded-lg">
-                Seleccionado: {activeGuestForIa.name}
-              </span>
-            )}
-          </div>
-
-          {isIaLoading ? (
-            <div className="flex flex-col items-center justify-center flex-1 gap-2 py-4">
-              <Loader2 className="h-6 w-6 text-indigo-600 animate-spin" />
-              <p className="text-[11px] text-zinc-500 font-bold tracking-wide animate-pulse">
-                Gemini procesando perfil de consumo...
-              </p>
-            </div>
-          ) : iaResponse ? (
-            <div className="flex flex-col gap-4 animate-fade-in flex-1">
-              <div>
-                <p className="text-dark-primary text-xs font-semibold bg-zinc-50 p-3 rounded-xl border border-zinc-100 leading-relaxed">
-                  "{iaResponse.analisis_perfil}"
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-extrabold tracking-wider text-zinc-400 uppercase">
-                  Servicios Sugeridos
-                </span>
-                <div className="grid grid-cols-1 gap-2 max-h-[150px] overflow-y-auto pr-1">
-                  {iaResponse.servicios_recomendados?.map((serv: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className="bg-white border border-zinc-100 p-3 rounded-xl flex items-start justify-between gap-4 shadow-xs"
-                    >
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-xs font-extrabold text-dark-primary flex items-center gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-                          {serv.nombre_servicio}
-                        </span>
-                        <span className="text-[11px] text-dark-secondary font-medium leading-relaxed">
-                          {serv.justificacion}
-                        </span>
-                      </div>
-                      {serv.descuento_sugerido > 0 && (
-                        <span className="bg-emerald-50 text-emerald-600 text-[10px] font-extrabold px-2 py-0.5 rounded-lg flex-shrink-0">
-                          -{serv.descuento_sugerido}%
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                <div className="flex md:flex-col justify-between items-end gap-2 shrink-0">
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
+                    task.estado === 'Resuelto' ? 'bg-green-100 text-green-800' :
+                    task.estado === 'En Progreso' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {task.estado}
+                  </span>
+                  <span className="text-[10px] text-gray-400">Automatizado</span>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center flex-1 text-center py-6">
-              <Sparkles className="h-8 w-8 text-indigo-300/60 mb-2 animate-bounce" />
-              <h5 className="text-xs font-bold text-dark-primary mb-1">Sin Huésped Seleccionado</h5>
-              <p className="text-[11px] text-dark-secondary max-w-[280px] leading-relaxed">
-                Haz clic en el botón de <span className="font-extrabold text-indigo-600">IA</span> en cualquier fila de la tabla para recibir ofertas personalizadas.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Card 2: Actividad Reciente */}
-        <div className="bg-white border border-zinc-100 rounded-2xl p-6 shadow-xs flex flex-col gap-4">
-          <div className="flex items-center gap-2.5 text-brand-blue font-bold text-xs tracking-wider uppercase">
-            <div className="bg-brand-blue/10 p-2 rounded-xl text-brand-blue">
-              <Clock className="h-4.5 w-4.5" />
-            </div>
-            Actividad Reciente
-          </div>
-
-          <div className="flex flex-col gap-3 pt-1">
-            <div className="flex justify-between items-center text-xs border-b border-zinc-50 pb-2.5 last:border-0 last:pb-0">
-              <span className="text-dark-primary font-medium">
-                Nuevo Huésped registrado:{" "}
-                <span className="font-bold">Sarah Jansens</span>
-              </span>
-              <span className="text-[10px] text-dark-secondary/60 font-semibold">
-                hace 2h
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-xs pb-0">
-              <span className="text-dark-primary font-medium">
-                Check-out finalizado:{" "}
-                <span className="font-bold">Marcus Weber</span>
-              </span>
-              <span className="text-[10px] text-dark-secondary/60 font-semibold">
-                hace 5h
-              </span>
-            </div>
+            ))}
           </div>
         </div>
       </div>
-
-      <CreateGuestDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
-
-      <EditGuestDialog
-        key={selectedGuest ? `edit-${selectedGuest.id}-${isEditOpen}` : "none"}
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        guest={selectedGuest}
-      />
     </div>
   );
 }
