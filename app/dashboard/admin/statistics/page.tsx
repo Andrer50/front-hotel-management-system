@@ -5,7 +5,7 @@ export default function StatisticsPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-6 bg-gray-50 min-h-screen">
       {/* Cabecera */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">RF-20: Dashboard Gerencial y Reportes</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard Gerencial y Reportes</h1>
         <p className="text-sm text-gray-500">Indicadores clave de rendimiento para la toma de decisiones basada en datos.</p>
       </div>
 
