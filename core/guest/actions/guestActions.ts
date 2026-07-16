@@ -43,9 +43,11 @@ export const deleteGuestAction = async (id: number): Promise<void> => {
 // ==============================================================================
 // 🚀 NUEVO: ACCIÓN DE GEMINI IA PARA RECOMENDACIÓN DE SERVICIOS
 // ==============================================================================
+// ==============================================================================
+// 🚀 NUEVO: ACCIÓN DE GEMINI IA PARA RECOMENDACIÓN DE SERVICIOS
+// ==============================================================================
 export const obtenerRecomendacionesIAAction = async (
   payload: PerfilHuespedPayload
 ): Promise<any> => {
-  // 🟢 Reemplaza el puerto de abajo (8000 o 8080) por el puerto real donde corre tu Django
-  return apiClient.post<any>("http://localhost:8000/api/hotel/ia/recomendar-servicios/", payload);
+  return apiClient.post<any>("hotel/ia/recomendar-servicios", payload);
 };
