@@ -40,12 +40,6 @@ export const deleteGuestAction = async (id: number): Promise<void> => {
   return apiClient.delete<void>(`hotel/huespedes/${id}`);
 };
 
-// ==============================================================================
-// 🚀 NUEVO: ACCIÓN DE GEMINI IA PARA RECOMENDACIÓN DE SERVICIOS
-// ==============================================================================
-// ==============================================================================
-// 🚀 NUEVO: ACCIÓN DE GEMINI IA PARA RECOMENDACIÓN DE SERVICIOS
-// ==============================================================================
 export const obtenerRecomendacionesIAAction = async (
   payload: PerfilHuespedPayload
 ): Promise<any> => {
